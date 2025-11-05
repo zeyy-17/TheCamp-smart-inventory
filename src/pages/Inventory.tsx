@@ -154,6 +154,11 @@ const Inventory = () => {
     setEditDialogOpen(true);
   };
 
+  const handleRemoveProduct = (id: number) => {
+    setItems(items.filter(item => item.id !== id));
+    toast.success("Product removed successfully");
+  };
+
   return (
     <div className="flex-1 bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -233,9 +238,14 @@ const Inventory = () => {
                     </td>
                     <td className="py-4 px-6 text-sm text-muted-foreground">{item.lastUpdated}</td>
                     <td className="py-4 px-6">
-                      <Button variant="outline" size="sm" onClick={() => handleEditClick(item)}>
-                        Edit
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEditClick(item)}>
+                          Edit
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => handleRemoveProduct(item.id)}>
+                          Remove
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

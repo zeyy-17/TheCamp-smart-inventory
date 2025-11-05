@@ -1,10 +1,15 @@
 import { InsightCard } from "@/components/InsightCard";
 import { DashboardCard } from "@/components/DashboardCard";
-import { Brain, TrendingUp, AlertCircle, Target, Edit } from "lucide-react";
+import { Brain, TrendingUp, AlertCircle, Target } from "lucide-react";
 import { toast } from "sonner";
-import { EditInsightDialog } from "@/components/EditInsightDialog";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
+import { AdjustForecastDialog } from "@/components/AdjustForecastDialog";
+import { SeasonalAnalysisDialog } from "@/components/SeasonalAnalysisDialog";
+import { CreateBundleDialog } from "@/components/CreateBundleDialog";
+import { ReviewPricingDialog } from "@/components/ReviewPricingDialog";
+import { PlanPromotionDialog } from "@/components/PlanPromotionDialog";
+import { UpdateReorderPointDialog } from "@/components/UpdateReorderPointDialog";
 
 interface Insight {
   type: "warning" | "opportunity" | "stock" | "revenue";
@@ -14,9 +19,13 @@ interface Insight {
 }
 
 const Insights = () => {
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedInsight, setSelectedInsight] = useState<Insight | null>(null);
-  const [selectedInsightIndex, setSelectedInsightIndex] = useState<{ section: string; index: number } | null>(null);
+  const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
+  const [adjustForecastOpen, setAdjustForecastOpen] = useState(false);
+  const [seasonalAnalysisOpen, setSeasonalAnalysisOpen] = useState(false);
+  const [createBundleOpen, setCreateBundleOpen] = useState(false);
+  const [reviewPricingOpen, setReviewPricingOpen] = useState(false);
+  const [planPromotionOpen, setPlanPromotionOpen] = useState(false);
+  const [updateReorderOpen, setUpdateReorderOpen] = useState(false);
 
   const [criticalInsights, setCriticalInsights] = useState<Insight[]>([
     {
@@ -75,36 +84,35 @@ const Insights = () => {
     }
   ]);
 
-  const handleAction = (message: string) => {
-    toast.success(message);
-  };
-
-  const handleEditInsight = (section: string, index: number, insight: Insight) => {
-    setSelectedInsight(insight);
-    setSelectedInsightIndex({ section, index });
-    setEditDialogOpen(true);
-  };
-
-  const handleSaveInsight = (updatedInsight: Insight) => {
-    if (!selectedInsightIndex) return;
-
-    const { section, index } = selectedInsightIndex;
-    
-    if (section === "critical") {
-      const updated = [...criticalInsights];
-      updated[index] = updatedInsight;
-      setCriticalInsights(updated);
-    } else if (section === "opportunity") {
-      const updated = [...opportunityInsights];
-      updated[index] = updatedInsight;
-      setOpportunityInsights(updated);
-    } else if (section === "stock") {
-      const updated = [...stockInsights];
-      updated[index] = updatedInsight;
-      setStockInsights(updated);
+  const handleAction = (actionType: string) => {
+    switch (actionType) {
+      case "Create Purchase Order":
+        setPurchaseOrderOpen(true);
+        break;
+      case "Adjust Forecast":
+        setAdjustForecastOpen(true);
+        break;
+      case "View Seasonal Analysis":
+        setSeasonalAnalysisOpen(true);
+        break;
+      case "Create Bundle":
+        setCreateBundleOpen(true);
+        break;
+      case "Review Pricing":
+        setReviewPricingOpen(true);
+        break;
+      case "Optimize Schedule":
+        toast.success("Reorder schedule optimized successfully!");
+        break;
+      case "Plan Promotion":
+        setPlanPromotionOpen(true);
+        break;
+      case "Update Reorder Point":
+        setUpdateReorderOpen(true);
+        break;
+      default:
+        toast.success(`${actionType} initiated`);
     }
-
-    toast.success("Insight updated successfully");
   };
 
   return (
@@ -151,23 +159,14 @@ const Insights = () => {
           <h2 className="text-xl font-semibold text-foreground">Critical Actions</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {criticalInsights.map((insight, index) => (
-              <div key={index} className="relative group">
-                <InsightCard
-                  type={insight.type}
-                  title={insight.title}
-                  description={insight.description}
-                  action={insight.action}
-                  onAction={() => handleAction(`${insight.action} initiated`)}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleEditInsight("critical", index, insight)}
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-              </div>
+              <InsightCard
+                key={index}
+                type={insight.type}
+                title={insight.title}
+                description={insight.description}
+                action={insight.action}
+                onAction={() => handleAction(insight.action || "")}
+              />
             ))}
           </div>
         </div>
@@ -177,23 +176,14 @@ const Insights = () => {
           <h2 className="text-xl font-semibold text-foreground">Growth Opportunities</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {opportunityInsights.map((insight, index) => (
-              <div key={index} className="relative group">
-                <InsightCard
-                  type={insight.type}
-                  title={insight.title}
-                  description={insight.description}
-                  action={insight.action}
-                  onAction={() => handleAction(`${insight.action} initiated`)}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleEditInsight("opportunity", index, insight)}
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-              </div>
+              <InsightCard
+                key={index}
+                type={insight.type}
+                title={insight.title}
+                description={insight.description}
+                action={insight.action}
+                onAction={() => handleAction(insight.action || "")}
+              />
             ))}
           </div>
         </div>
@@ -203,34 +193,26 @@ const Insights = () => {
           <h2 className="text-xl font-semibold text-foreground">Stock Management</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {stockInsights.map((insight, index) => (
-              <div key={index} className="relative group">
-                <InsightCard
-                  type={insight.type}
-                  title={insight.title}
-                  description={insight.description}
-                  action={insight.action}
-                  onAction={() => handleAction(`${insight.action} initiated`)}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  onClick={() => handleEditInsight("stock", index, insight)}
-                >
-                  <Edit className="w-3 h-3" />
-                </Button>
-              </div>
+              <InsightCard
+                key={index}
+                type={insight.type}
+                title={insight.title}
+                description={insight.description}
+                action={insight.action}
+                onAction={() => handleAction(insight.action || "")}
+              />
             ))}
           </div>
         </div>
       </div>
 
-      <EditInsightDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        insight={selectedInsight}
-        onSave={handleSaveInsight}
-      />
+      <CreatePurchaseOrderDialog open={purchaseOrderOpen} onOpenChange={setPurchaseOrderOpen} />
+      <AdjustForecastDialog open={adjustForecastOpen} onOpenChange={setAdjustForecastOpen} />
+      <SeasonalAnalysisDialog open={seasonalAnalysisOpen} onOpenChange={setSeasonalAnalysisOpen} />
+      <CreateBundleDialog open={createBundleOpen} onOpenChange={setCreateBundleOpen} />
+      <ReviewPricingDialog open={reviewPricingOpen} onOpenChange={setReviewPricingOpen} />
+      <PlanPromotionDialog open={planPromotionOpen} onOpenChange={setPlanPromotionOpen} />
+      <UpdateReorderPointDialog open={updateReorderOpen} onOpenChange={setUpdateReorderOpen} />
     </div>
   );
 };

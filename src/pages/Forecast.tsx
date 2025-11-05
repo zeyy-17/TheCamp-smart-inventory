@@ -1,6 +1,8 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const dailyData = [
   { period: "Mon", actual: 850, forecast: 820 },
@@ -38,7 +40,24 @@ const trendingProducts = [
   { period: "Sun", heineken: 72, corona: 48, stella: 45, budweiser: 38 },
 ];
 
+const monthlyProductTrends = [
+  { month: "Jan", heineken: 320, corona: 280, stella: 240, budweiser: 200 },
+  { month: "Feb", heineken: 350, corona: 295, stella: 255, budweiser: 220 },
+  { month: "Mar", heineken: 380, corona: 310, stella: 270, budweiser: 235 },
+  { month: "Apr", heineken: 420, corona: 340, stella: 295, budweiser: 260 },
+  { month: "May", heineken: 465, corona: 380, stella: 325, budweiser: 285 },
+  { month: "Jun", heineken: 510, corona: 420, stella: 360, budweiser: 310 },
+];
+
 const Forecast = () => {
+  const handleExport = () => {
+    toast.success("Report exported successfully!");
+  };
+
+  const handleGenerateForecast = () => {
+    toast.success("Forecast generated successfully!");
+  };
+
   return (
     <div className="flex-1 bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -51,8 +70,8 @@ const Forecast = () => {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline">Export Report</Button>
-            <Button>Generate Forecast</Button>
+            <Button variant="outline" onClick={handleExport}>Export Report</Button>
+            <Button onClick={handleGenerateForecast}>Generate Forecast</Button>
           </div>
         </div>
 
@@ -256,6 +275,30 @@ const Forecast = () => {
                 <p className="text-2xl font-bold text-foreground mt-1">₱33,500</p>
                 <p className="text-xs text-muted-foreground mt-1">Confidence: Very High</p>
               </div>
+            </div>
+
+            {/* Monthly Product Trends */}
+            <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Product Trends - Monthly View</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={monthlyProductTrends}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="heineken" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Heineken" />
+                  <Line type="monotone" dataKey="corona" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Corona" />
+                  <Line type="monotone" dataKey="stella" stroke="hsl(var(--chart-3))" strokeWidth={2} name="Stella Artois" />
+                  <Line type="monotone" dataKey="budweiser" stroke="hsl(var(--chart-4))" strokeWidth={2} name="Budweiser" />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </TabsContent>
         </Tabs>

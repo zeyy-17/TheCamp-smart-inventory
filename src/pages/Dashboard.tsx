@@ -75,7 +75,7 @@ const Dashboard = () => {
             <InsightCard
               type="revenue"
               title="Revenue Forecast"
-              description="Weekend sales projected to exceed $15k. Ensure adequate stock for high-demand items."
+              description="Weekend sales projected to exceed ₱15,000. Ensure adequate stock for high-demand items."
               action="View Forecast"
               onAction={() => handleInsightAction("Opening sales forecast...")}
             />
