@@ -1,6 +1,16 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const dailyData = [
+  { period: "Mon", actual: 850, forecast: 820 },
+  { period: "Tue", actual: 920, forecast: 900 },
+  { period: "Wed", actual: 780, forecast: 850 },
+  { period: "Thu", actual: 1100, forecast: 1050 },
+  { period: "Fri", actual: 1350, forecast: 1300 },
+  { period: "Sat", actual: 1450, forecast: 1400 },
+  { period: "Sun", actual: 1200, forecast: 1180 },
+];
 
 const weeklyData = [
   { period: "Week 1", actual: 4200, forecast: 4000 },
@@ -16,6 +26,16 @@ const monthlyData = [
   { period: "Apr", actual: 25600, forecast: 24800 },
   { period: "May", actual: 28900, forecast: 28200 },
   { period: "Jun", actual: 31200, forecast: 30500 },
+];
+
+const trendingProducts = [
+  { period: "Mon", heineken: 45, corona: 32, stella: 28, budweiser: 25 },
+  { period: "Tue", heineken: 52, corona: 35, stella: 30, budweiser: 28 },
+  { period: "Wed", heineken: 48, corona: 38, stella: 32, budweiser: 26 },
+  { period: "Thu", heineken: 65, corona: 42, stella: 35, budweiser: 30 },
+  { period: "Fri", heineken: 78, corona: 55, stella: 48, budweiser: 42 },
+  { period: "Sat", heineken: 85, corona: 62, stella: 52, budweiser: 48 },
+  { period: "Sun", heineken: 72, corona: 48, stella: 45, budweiser: 38 },
 ];
 
 const Forecast = () => {
@@ -39,9 +59,67 @@ const Forecast = () => {
         {/* Forecast Tabs */}
         <Tabs defaultValue="monthly" className="space-y-6">
           <TabsList className="bg-muted">
+            <TabsTrigger value="daily">Daily Forecast</TabsTrigger>
             <TabsTrigger value="weekly">Weekly Forecast</TabsTrigger>
             <TabsTrigger value="monthly">Monthly Forecast</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="daily" className="space-y-6">
+            <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Daily Sales Projection</h3>
+              <ResponsiveContainer width="100%" height={400}>
+                <LineChart data={dailyData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="actual"
+                    stroke="hsl(var(--chart-1))"
+                    strokeWidth={3}
+                    name="Actual Sales (₱)"
+                    dot={{ fill: "hsl(var(--chart-1))", r: 5 }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="forecast"
+                    stroke="hsl(var(--chart-2))"
+                    strokeWidth={3}
+                    strokeDasharray="5 5"
+                    name="Forecasted Sales (₱)"
+                    dot={{ fill: "hsl(var(--chart-2))", r: 5 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Daily Insights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-card rounded-lg p-4 border border-border">
+                <p className="text-sm text-muted-foreground">Average Daily Sales</p>
+                <p className="text-2xl font-bold text-foreground mt-1">₱1,093</p>
+                <p className="text-xs text-green-600 mt-1">↑ 12% from last week</p>
+              </div>
+              <div className="bg-card rounded-lg p-4 border border-border">
+                <p className="text-sm text-muted-foreground">Forecast Accuracy</p>
+                <p className="text-2xl font-bold text-foreground mt-1">91%</p>
+                <p className="text-xs text-green-600 mt-1">↑ 2% improvement</p>
+              </div>
+              <div className="bg-card rounded-lg p-4 border border-border">
+                <p className="text-sm text-muted-foreground">Tomorrow's Projection</p>
+                <p className="text-2xl font-bold text-foreground mt-1">₱1,250</p>
+                <p className="text-xs text-muted-foreground mt-1">Confidence: High</p>
+              </div>
+            </div>
+          </TabsContent>
 
           <TabsContent value="weekly" className="space-y-6">
             <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
@@ -64,7 +142,7 @@ const Forecast = () => {
                     dataKey="actual"
                     stroke="hsl(var(--chart-1))"
                     strokeWidth={3}
-                    name="Actual Sales"
+                    name="Actual Sales (₱)"
                     dot={{ fill: "hsl(var(--chart-1))", r: 5 }}
                   />
                   <Line
@@ -73,7 +151,7 @@ const Forecast = () => {
                     stroke="hsl(var(--chart-2))"
                     strokeWidth={3}
                     strokeDasharray="5 5"
-                    name="Forecasted Sales"
+                    name="Forecasted Sales (₱)"
                     dot={{ fill: "hsl(var(--chart-2))", r: 5 }}
                   />
                 </LineChart>
@@ -84,7 +162,7 @@ const Forecast = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-card rounded-lg p-4 border border-border">
                 <p className="text-sm text-muted-foreground">Average Weekly Sales</p>
-                <p className="text-2xl font-bold text-foreground mt-1">$4,825</p>
+                <p className="text-2xl font-bold text-foreground mt-1">₱4,825</p>
                 <p className="text-xs text-green-600 mt-1">↑ 15% from last month</p>
               </div>
               <div className="bg-card rounded-lg p-4 border border-border">
@@ -94,9 +172,33 @@ const Forecast = () => {
               </div>
               <div className="bg-card rounded-lg p-4 border border-border">
                 <p className="text-sm text-muted-foreground">Next Week Projection</p>
-                <p className="text-2xl font-bold text-foreground mt-1">$7,200</p>
+                <p className="text-2xl font-bold text-foreground mt-1">₱7,200</p>
                 <p className="text-xs text-muted-foreground mt-1">Confidence: High</p>
               </div>
+            </div>
+
+            {/* Trending Products Chart */}
+            <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
+              <h3 className="text-lg font-semibold mb-4 text-foreground">Trending Products This Week</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={trendingProducts}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" />
+                  <YAxis stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                    }}
+                  />
+                  <Legend />
+                  <Line type="monotone" dataKey="heineken" stroke="hsl(var(--chart-1))" strokeWidth={2} name="Heineken" />
+                  <Line type="monotone" dataKey="corona" stroke="hsl(var(--chart-2))" strokeWidth={2} name="Corona" />
+                  <Line type="monotone" dataKey="stella" stroke="hsl(var(--chart-3))" strokeWidth={2} name="Stella Artois" />
+                  <Line type="monotone" dataKey="budweiser" stroke="hsl(var(--chart-4))" strokeWidth={2} name="Budweiser" />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </TabsContent>
 
@@ -121,7 +223,7 @@ const Forecast = () => {
                     dataKey="actual"
                     stroke="hsl(var(--chart-1))"
                     strokeWidth={3}
-                    name="Actual Sales"
+                    name="Actual Sales (₱)"
                     dot={{ fill: "hsl(var(--chart-1))", r: 6 }}
                   />
                   <Line
@@ -130,7 +232,7 @@ const Forecast = () => {
                     stroke="hsl(var(--chart-2))"
                     strokeWidth={3}
                     strokeDasharray="5 5"
-                    name="Forecasted Sales"
+                    name="Forecasted Sales (₱)"
                     dot={{ fill: "hsl(var(--chart-2))", r: 6 }}
                   />
                 </LineChart>
@@ -141,7 +243,7 @@ const Forecast = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-card rounded-lg p-4 border border-border">
                 <p className="text-sm text-muted-foreground">Average Monthly Sales</p>
-                <p className="text-2xl font-bold text-foreground mt-1">$24,383</p>
+                <p className="text-2xl font-bold text-foreground mt-1">₱24,383</p>
                 <p className="text-xs text-green-600 mt-1">↑ 22% YoY growth</p>
               </div>
               <div className="bg-card rounded-lg p-4 border border-border">
@@ -151,7 +253,7 @@ const Forecast = () => {
               </div>
               <div className="bg-card rounded-lg p-4 border border-border">
                 <p className="text-sm text-muted-foreground">Next Month Projection</p>
-                <p className="text-2xl font-bold text-foreground mt-1">$33,500</p>
+                <p className="text-2xl font-bold text-foreground mt-1">₱33,500</p>
                 <p className="text-xs text-muted-foreground mt-1">Confidence: Very High</p>
               </div>
             </div>

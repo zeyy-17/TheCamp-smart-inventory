@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
 import { useState } from "react";
+import { AddProductDialog } from "@/components/AddProductDialog";
+import { EditProductDialog } from "@/components/EditProductDialog";
+import { toast } from "sonner";
 
 const categories = ["All", "Beers", "Tequila", "Vodka", "Rum", "Gin", "Wine", "Whisky", "Cognac", "Single Malt", "Liquer"];
 
@@ -120,12 +123,36 @@ const getStatusColor = (status: string) => {
 const Inventory = () => {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [items, setItems] = useState(inventoryItems);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<typeof inventoryItems[0] | null>(null);
 
-  const filteredItems = inventoryItems.filter((item) => {
+  const filteredItems = items.filter((item) => {
     const matchesCategory = selectedCategory === "All" || item.category === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
+  const handleAddProduct = (product: any) => {
+    const newProduct = {
+      id: items.length + 1,
+      ...product,
+      lastUpdated: "Just now",
+    };
+    setItems([...items, newProduct]);
+    toast.success("Product added successfully");
+  };
+
+  const handleEditProduct = (id: number, updatedProduct: any) => {
+    setItems(items.map(item => item.id === id ? { ...item, ...updatedProduct } : item));
+    toast.success("Product updated successfully");
+  };
+
+  const handleEditClick = (product: typeof inventoryItems[0]) => {
+    setSelectedProduct(product);
+    setEditDialogOpen(true);
+  };
 
   return (
     <div className="flex-1 bg-background p-8">
@@ -138,7 +165,7 @@ const Inventory = () => {
               Real-time monitoring and stock control
             </p>
           </div>
-          <Button className="gap-2">
+          <Button className="gap-2" onClick={() => setAddDialogOpen(true)}>
             <Plus className="w-4 h-4" />
             Add Product
           </Button>
@@ -206,7 +233,7 @@ const Inventory = () => {
                     </td>
                     <td className="py-4 px-6 text-sm text-muted-foreground">{item.lastUpdated}</td>
                     <td className="py-4 px-6">
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" onClick={() => handleEditClick(item)}>
                         Edit
                       </Button>
                     </td>
@@ -224,6 +251,19 @@ const Inventory = () => {
           </div>
         </div>
       </div>
+      
+      <AddProductDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onAdd={handleAddProduct}
+      />
+      
+      <EditProductDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        product={selectedProduct}
+        onEdit={handleEditProduct}
+      />
     </div>
   );
 };

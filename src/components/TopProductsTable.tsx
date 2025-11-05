@@ -1,11 +1,11 @@
 import { Badge } from "./ui/badge";
 
 const products = [
-  { name: "Premium Coffee Beans", quantity: 145, status: "In Stock", trend: "+12%" },
-  { name: "Organic Tea Collection", quantity: 89, status: "Low Stock", trend: "+8%" },
-  { name: "Artisan Chocolate Box", quantity: 203, status: "In Stock", trend: "+25%" },
-  { name: "Gourmet Pasta Set", quantity: 12, status: "Critical", trend: "-5%" },
-  { name: "Olive Oil Premium", quantity: 67, status: "In Stock", trend: "+15%" },
+  { name: "Heineken Orig/Silver", quantity: 375, status: "In Stock", trend: "+18%" },
+  { name: "Smirnoff Mule", quantity: 285, status: "In Stock", trend: "+15%" },
+  { name: "Hoegaarden White", quantity: 178, status: "In Stock", trend: "+12%" },
+  { name: "Absolut Vodka", quantity: 95, status: "In Stock", trend: "+10%" },
+  { name: "Jack Daniels", quantity: 95, status: "In Stock", trend: "+9%" },
 ];
 
 const getStatusColor = (status: string) => {

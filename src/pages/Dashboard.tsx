@@ -39,7 +39,7 @@ const Dashboard = () => {
           />
           <DashboardCard
             title="Weekly Sales"
-            value="$45,231"
+            value="₱45,231"
             subtitle="This week"
             trend={{ value: 18, isPositive: true }}
             icon={DollarSign}
