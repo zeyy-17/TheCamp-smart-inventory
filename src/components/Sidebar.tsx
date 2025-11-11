@@ -7,7 +7,6 @@ import { Button } from "./ui/button";
 import logo from "@/assets/the-camp-logo.jpg";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "Sales Forecast", href: "/forecast", icon: TrendingUp },
   { name: "Smart Insights", href: "/insights", icon: Lightbulb },

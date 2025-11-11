@@ -33,7 +33,7 @@ const AppRoutes = () => {
             <div className="flex min-h-screen">
               <Sidebar />
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/" element={<Inventory />} />
                 <Route path="/inventory" element={<Inventory />} />
                 <Route path="/forecast" element={<Forecast />} />
                 <Route path="/insights" element={<Insights />} />
