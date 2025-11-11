@@ -1,18 +1,29 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { User, Lock } from 'lucide-react';
+import { User, Lock, LogOut } from 'lucide-react';
 
 const Account = () => {
-  const { username, updateCredentials } = useAuth();
+  const { username, updateCredentials, logout } = useAuth();
+  const navigate = useNavigate();
   const [newUsername, setNewUsername] = useState(username || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const { toast } = useToast();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+    toast({
+      title: "Logged Out",
+      description: "You have been logged out successfully",
+    });
+  };
 
   const handleUpdateUsername = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,6 +147,33 @@ const Account = () => {
                 </div>
                 <Button type="submit">Update Password</Button>
               </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <LogOut className="h-5 w-5 text-destructive" />
+                <CardTitle>Logout</CardTitle>
+              </div>
+              <CardDescription>
+                Sign out of your account
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Logged in as: <span className="font-medium text-foreground">{username}</span>
+                </p>
+                <Button 
+                  onClick={handleLogout} 
+                  variant="destructive"
+                  className="w-full"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

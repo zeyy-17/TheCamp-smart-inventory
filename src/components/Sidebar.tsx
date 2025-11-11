@@ -1,9 +1,6 @@
-import { LayoutDashboard, Package, TrendingUp, Lightbulb, BarChart3, User, LogOut } from "lucide-react";
+import { Package, TrendingUp, Lightbulb, BarChart3, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "./ui/button";
+import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/the-camp-logo.jpg";
 
 const navigation = [
@@ -16,18 +13,6 @@ const navigation = [
 
 export const Sidebar = () => {
   const location = useLocation();
-  const { logout, username } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-    toast({
-      title: "Logged Out",
-      description: "You have been logged out successfully",
-    });
-  };
 
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground min-h-screen border-r border-sidebar-border">
@@ -58,20 +43,6 @@ export const Sidebar = () => {
           );
         })}
       </nav>
-
-      <div className="mt-auto p-4 border-t border-sidebar-border space-y-4 absolute bottom-0 left-0 right-0">
-        <div className="text-sm text-muted-foreground px-3">
-          Logged in as: <span className="font-medium text-foreground">{username}</span>
-        </div>
-        <Button 
-          onClick={handleLogout} 
-          variant="outline" 
-          className="w-full justify-start"
-        >
-          <LogOut className="mr-3 h-5 w-5" />
-          Logout
-        </Button>
-      </div>
     </aside>
   );
 };
