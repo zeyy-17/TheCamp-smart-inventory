@@ -4,10 +4,24 @@ import { TopProductsTable } from "@/components/TopProductsTable";
 import { InsightCard } from "@/components/InsightCard";
 import { Package, TrendingUp, DollarSign, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
+import { useState } from "react";
 
 const Dashboard = () => {
-  const handleInsightAction = (message: string) => {
-    toast.success(message);
+  const navigate = useNavigate();
+  const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
+
+  const handleReorderOpportunity = () => {
+    navigate("/inventory");
+  };
+
+  const handleStockAlert = () => {
+    setReorderDialogOpen(true);
+  };
+
+  const handleViewForecast = () => {
+    navigate("/forecast");
   };
 
   return (
@@ -61,23 +75,23 @@ const Dashboard = () => {
             <InsightCard
               type="opportunity"
               title="Reorder Opportunity"
-              description="Premium Coffee Beans selling 25% faster than predicted. Consider increasing next order by 30%."
+              description="Top-selling products detected with 25% higher velocity. AI recommends increasing order quantities by 30% based on predictive analytics."
               action="View Details"
-              onAction={() => handleInsightAction("Navigating to product details...")}
+              onAction={handleReorderOpportunity}
             />
             <InsightCard
               type="warning"
               title="Stock Alert"
-              description="Gourmet Pasta Set at critical level (12 units). Reorder recommended within 48 hours."
+              description="Multiple products below safety stock levels. Immediate reorder recommended to prevent stockouts within 48 hours."
               action="Reorder Now"
-              onAction={() => handleInsightAction("Initiating reorder process...")}
+              onAction={handleStockAlert}
             />
             <InsightCard
               type="revenue"
               title="Revenue Forecast"
-              description="Weekend sales projected to exceed ₱15,000. Ensure adequate stock for high-demand items."
+              description="AI predicts ₱15,000+ weekend sales spike. Advanced forecasting models suggest optimizing inventory for high-demand items."
               action="View Forecast"
-              onAction={() => handleInsightAction("Opening sales forecast...")}
+              onAction={handleViewForecast}
             />
           </div>
         </div>
@@ -85,6 +99,11 @@ const Dashboard = () => {
         {/* Products Table */}
         <TopProductsTable />
       </div>
+
+      <CreatePurchaseOrderDialog 
+        open={reorderDialogOpen} 
+        onOpenChange={setReorderDialogOpen} 
+      />
     </div>
   );
 };
