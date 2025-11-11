@@ -1,9 +1,10 @@
-import { Package, TrendingUp, Lightbulb, BarChart3, User } from "lucide-react";
+import { LayoutDashboard, Package, TrendingUp, Lightbulb, BarChart3, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/the-camp-logo.jpg";
 
 const navigation = [
+  { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "Sales Forecast", href: "/forecast", icon: TrendingUp },
   { name: "Smart Insights", href: "/insights", icon: Lightbulb },
