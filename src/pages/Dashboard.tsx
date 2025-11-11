@@ -25,7 +25,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <DashboardCard
             title="Total Products"
-            value="1,247"
+            value="79"
             subtitle="Active items"
             trend={{ value: 12, isPositive: true }}
             icon={Package}

@@ -52,7 +52,7 @@ const Insights = () => {
     {
       type: "revenue",
       title: "Cross-Sell Opportunity",
-      description: "Customers buying Olive Oil Premium often purchase Artisan Cheese. Bundle pricing could increase AOV by 18%.",
+      description: "Customers buying Heineken often purchase Corona. Bundle pricing could increase AOV by 18%.",
       action: "Create Bundle"
     },
     {
@@ -73,7 +73,7 @@ const Insights = () => {
     {
       type: "stock",
       title: "Overstock Alert",
-      description: "Imported Wine Bottles inventory 45% above optimal level. Consider promotional campaign to accelerate turnover.",
+      description: "Smirnoff Mule inventory 45% above optimal level. Consider promotional campaign to accelerate turnover.",
       action: "Plan Promotion"
     },
     {

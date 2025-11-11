@@ -32,21 +32,33 @@ export const ReviewPricingDialog = ({ open, onOpenChange }: ReviewPricingDialogP
               </thead>
               <tbody>
                 <tr className="border-b">
-                  <td className="p-3 text-sm">Specialty Cheese Wheel</td>
-                  <td className="p-3 text-sm">₱450</td>
-                  <td className="p-3 text-sm font-semibold">₱486</td>
+                  <td className="p-3 text-sm">Heineken Orig/Silver</td>
+                  <td className="p-3 text-sm">₱130</td>
+                  <td className="p-3 text-sm font-semibold">₱140</td>
+                  <td className="p-3 text-sm text-green-600">+7.7%</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="p-3 text-sm">J.W. Black Label</td>
+                  <td className="p-3 text-sm">₱2,500</td>
+                  <td className="p-3 text-sm font-semibold">₱2,700</td>
                   <td className="p-3 text-sm text-green-600">+8%</td>
                 </tr>
                 <tr className="border-b">
-                  <td className="p-3 text-sm">Premium Wine</td>
-                  <td className="p-3 text-sm">₱1,200</td>
-                  <td className="p-3 text-sm font-semibold">₱1,296</td>
+                  <td className="p-3 text-sm">Grey Goose</td>
+                  <td className="p-3 text-sm">₱3,500</td>
+                  <td className="p-3 text-sm font-semibold">₱3,780</td>
+                  <td className="p-3 text-sm text-green-600">+8%</td>
+                </tr>
+                <tr className="border-b">
+                  <td className="p-3 text-sm">Patron Tequila Silver</td>
+                  <td className="p-3 text-sm">₱5,000</td>
+                  <td className="p-3 text-sm font-semibold">₱5,400</td>
                   <td className="p-3 text-sm text-green-600">+8%</td>
                 </tr>
                 <tr>
-                  <td className="p-3 text-sm">Artisan Chocolate</td>
-                  <td className="p-3 text-sm">₱280</td>
-                  <td className="p-3 text-sm font-semibold">₱302</td>
+                  <td className="p-3 text-sm">Luc Belaire Luxe</td>
+                  <td className="p-3 text-sm">₱3,500</td>
+                  <td className="p-3 text-sm font-semibold">₱3,780</td>
                   <td className="p-3 text-sm text-green-600">+8%</td>
                 </tr>
               </tbody>
@@ -54,8 +66,8 @@ export const ReviewPricingDialog = ({ open, onOpenChange }: ReviewPricingDialogP
           </div>
           <div className="bg-muted/50 rounded-lg p-4">
             <p className="text-sm text-muted-foreground">
-              Elasticity analysis shows minimal demand impact with 8% price increase. 
-              Projected revenue increase: ₱12,500/month
+              Elasticity analysis shows minimal demand impact with 8% price increase on premium beverages. 
+              Projected revenue increase: ₱18,750/month
             </p>
           </div>
         </div>
