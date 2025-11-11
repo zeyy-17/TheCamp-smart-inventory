@@ -6,18 +6,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { User, Lock, LogOut } from 'lucide-react';
+import { Lock, LogOut } from 'lucide-react';
 
 const Account = () => {
-  const { username, updateCredentials, logout } = useAuth();
+  const { user, signOut, updatePassword } = useAuth();
   const navigate = useNavigate();
-  const [newUsername, setNewUsername] = useState(username || '');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const { toast } = useToast();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
     toast({
       title: "Logged Out",
@@ -25,32 +24,13 @@ const Account = () => {
     });
   };
 
-  const handleUpdateUsername = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (newUsername.trim().length < 3) {
-      toast({
-        title: "Invalid Username",
-        description: "Username must be at least 3 characters long",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    updateCredentials(newUsername, localStorage.getItem('app_password') || 'Inv2025');
-    toast({
-      title: "Username Updated",
-      description: "Your username has been changed successfully",
-    });
-  };
-
-  const handleUpdatePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (newPassword.length < 6) {
+    if (newPassword.length < 8) {
       toast({
         title: "Invalid Password",
-        description: "Password must be at least 6 characters long",
+        description: "Password must be at least 8 characters long",
         variant: "destructive",
       });
       return;
@@ -65,7 +45,17 @@ const Account = () => {
       return;
     }
 
-    updateCredentials(newUsername, newPassword);
+    const { error } = await updatePassword(newPassword);
+    
+    if (error) {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Could not update password",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setNewPassword('');
     setConfirmPassword('');
     toast({
@@ -79,38 +69,10 @@ const Account = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Account Settings</h1>
-          <p className="text-muted-foreground">Manage your account credentials</p>
+          <p className="text-muted-foreground">Manage your account</p>
         </div>
 
         <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                <CardTitle>Update Username</CardTitle>
-              </div>
-              <CardDescription>
-                Change your login username
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUpdateUsername} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="new-username">New Username</Label>
-                  <Input
-                    id="new-username"
-                    type="text"
-                    value={newUsername}
-                    onChange={(e) => setNewUsername(e.target.value)}
-                    placeholder="Enter new username"
-                    required
-                  />
-                </div>
-                <Button type="submit">Update Username</Button>
-              </form>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -130,8 +92,9 @@ const Account = () => {
                     type="password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password"
+                    placeholder="Enter new password (min 8 characters)"
                     required
+                    minLength={8}
                   />
                 </div>
                 <div className="space-y-2">
@@ -163,7 +126,7 @@ const Account = () => {
             <CardContent>
               <div className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Logged in as: <span className="font-medium text-foreground">{username}</span>
+                  Logged in as: <span className="font-medium text-foreground">{user?.email}</span>
                 </p>
                 <Button 
                   onClick={handleLogout} 

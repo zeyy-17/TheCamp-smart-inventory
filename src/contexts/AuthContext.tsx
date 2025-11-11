@@ -1,63 +1,78 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  username: string | null;
-  login: (username: string, password: string) => boolean;
-  logout: () => void;
-  updateCredentials: (newUsername: string, newPassword: string) => void;
+  user: User | null;
+  session: Session | null;
+  signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
 
-  // Initialize credentials from localStorage or use defaults
   useEffect(() => {
-    const storedUsername = localStorage.getItem('app_username') || 'Krista';
-    const storedPassword = localStorage.getItem('app_password') || 'Inv2025';
-    
-    if (!localStorage.getItem('app_username')) {
-      localStorage.setItem('app_username', storedUsername);
-      localStorage.setItem('app_password', storedPassword);
-    }
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsAuthenticated(!!session);
+      }
+    );
 
-    const authStatus = localStorage.getItem('isAuthenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
-      setUsername(storedUsername);
-    }
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (inputUsername: string, inputPassword: string): boolean => {
-    const storedUsername = localStorage.getItem('app_username') || 'Krista';
-    const storedPassword = localStorage.getItem('app_password') || 'Inv2025';
-
-    if (inputUsername === storedUsername && inputPassword === storedPassword) {
-      setIsAuthenticated(true);
-      setUsername(inputUsername);
-      localStorage.setItem('isAuthenticated', 'true');
-      return true;
-    }
-    return false;
+  const signUp = async (email: string, password: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl
+      }
+    });
+    return { error };
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    setUsername(null);
-    localStorage.removeItem('isAuthenticated');
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error };
   };
 
-  const updateCredentials = (newUsername: string, newPassword: string) => {
-    localStorage.setItem('app_username', newUsername);
-    localStorage.setItem('app_password', newPassword);
-    setUsername(newUsername);
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    return { error };
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, username, login, logout, updateCredentials }}>
+    <AuthContext.Provider value={{ isAuthenticated, user, session, signUp, signIn, signOut, updatePassword }}>
       {children}
     </AuthContext.Provider>
   );
