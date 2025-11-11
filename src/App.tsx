@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Forecast from "./pages/Forecast";
 import Insights from "./pages/Insights";
+import DataAnalytics from "./pages/DataAnalytics";
 import Reports from "./pages/Reports";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
@@ -37,6 +38,7 @@ const AppRoutes = () => {
                 <Route path="/inventory" element={<Inventory />} />
                 <Route path="/forecast" element={<Forecast />} />
                 <Route path="/insights" element={<Insights />} />
+                <Route path="/analytics" element={<DataAnalytics />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="*" element={<NotFound />} />
