@@ -4,6 +4,9 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useState } from "react";
+import { productSchema } from "@/lib/validation";
+import { toast } from "sonner";
+import { z } from "zod";
 
 interface AddProductDialogProps {
   open: boolean;
@@ -26,24 +29,51 @@ export const AddProductDialog = ({ open, onOpenChange, onAdd }: AddProductDialog
     quantity: "",
     reorderPoint: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const quantity = parseInt(formData.quantity);
-    const reorderPoint = parseInt(formData.reorderPoint);
+    setErrors({});
     
-    const status = quantity <= reorderPoint ? (quantity < reorderPoint * 0.5 ? "Critical" : "Low Stock") : "In Stock";
-    
-    onAdd({
-      name: formData.name,
-      category: formData.category,
-      quantity,
-      reorderPoint,
-      status,
-    });
-    
-    setFormData({ name: "", category: "", quantity: "", reorderPoint: "" });
-    onOpenChange(false);
+    try {
+      const quantity = parseInt(formData.quantity);
+      const reorderPoint = parseInt(formData.reorderPoint);
+      
+      // Validate with Zod
+      const validatedData = productSchema.parse({
+        name: formData.name,
+        category: formData.category,
+        quantity,
+        reorderPoint,
+      });
+      
+      const status = validatedData.quantity <= validatedData.reorderPoint 
+        ? (validatedData.quantity < validatedData.reorderPoint * 0.5 ? "Critical" : "Low Stock") 
+        : "In Stock";
+      
+      onAdd({
+        name: validatedData.name,
+        category: validatedData.category,
+        quantity: validatedData.quantity,
+        reorderPoint: validatedData.reorderPoint,
+        status,
+      });
+      
+      setFormData({ name: "", category: "", quantity: "", reorderPoint: "" });
+      onOpenChange(false);
+      toast.success("Product added successfully");
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            fieldErrors[err.path[0].toString()] = err.message;
+          }
+        });
+        setErrors(fieldErrors);
+        toast.error("Please fix the validation errors");
+      }
+    }
   };
 
   return (
@@ -59,8 +89,10 @@ export const AddProductDialog = ({ open, onOpenChange, onAdd }: AddProductDialog
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              maxLength={100}
               required
             />
+            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
           </div>
           
           <div className="space-y-2">
@@ -81,6 +113,7 @@ export const AddProductDialog = ({ open, onOpenChange, onAdd }: AddProductDialog
                 ))}
               </SelectContent>
             </Select>
+            {errors.category && <p className="text-sm text-destructive">{errors.category}</p>}
           </div>
           
           <div className="space-y-2">
@@ -89,10 +122,12 @@ export const AddProductDialog = ({ open, onOpenChange, onAdd }: AddProductDialog
               id="quantity"
               type="number"
               min="0"
+              max="1000000"
               value={formData.quantity}
               onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               required
             />
+            {errors.quantity && <p className="text-sm text-destructive">{errors.quantity}</p>}
           </div>
           
           <div className="space-y-2">
@@ -101,10 +136,12 @@ export const AddProductDialog = ({ open, onOpenChange, onAdd }: AddProductDialog
               id="reorderPoint"
               type="number"
               min="0"
+              max="100000"
               value={formData.reorderPoint}
               onChange={(e) => setFormData({ ...formData, reorderPoint: e.target.value })}
               required
             />
+            {errors.reorderPoint && <p className="text-sm text-destructive">{errors.reorderPoint}</p>}
           </div>
           
           <DialogFooter>
