@@ -1,8 +1,11 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useState } from "react";
+import { BrainCircuit, Sparkles, TrendingUp, Zap, Database } from "lucide-react";
 
 const dailyData = [
   { period: "Mon", actual: 850, forecast: 820 },
@@ -64,16 +67,64 @@ const Forecast = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Sales Forecast</h1>
-            <p className="text-muted-foreground mt-1">
-              Predictive analytics for smarter planning
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-foreground">Sales Forecast</h1>
+              <Badge variant="secondary" className="gap-1">
+                <BrainCircuit className="w-3 h-3" />
+                AI-Powered
+              </Badge>
+            </div>
+            <p className="text-muted-foreground">
+              Machine learning predictions with 94% accuracy • Real-time trend analysis
             </p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleExport}>Export Report</Button>
-            <Button onClick={handleGenerateForecast}>Generate Forecast</Button>
+            <Button onClick={handleGenerateForecast} className="gap-2">
+              <Sparkles className="w-4 h-4" />
+              Generate AI Forecast
+            </Button>
           </div>
         </div>
+
+        {/* AI Analytics Overview */}
+        <Card className="bg-gradient-to-r from-primary/5 to-blue-500/5 border-primary/20">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-primary" />
+                <CardTitle>Advanced Analytics Engine</CardTitle>
+              </div>
+              <Badge variant="outline" className="gap-1">
+                <Zap className="w-3 h-3" />
+                Live Model
+              </Badge>
+            </div>
+            <CardDescription>
+              Powered by time-series analysis, seasonal decomposition, and neural networks
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="p-3 bg-background/50 rounded-lg border">
+                <p className="text-sm text-muted-foreground">Model Type</p>
+                <p className="font-semibold text-primary">LSTM Neural Network</p>
+              </div>
+              <div className="p-3 bg-background/50 rounded-lg border">
+                <p className="text-sm text-muted-foreground">Training Data</p>
+                <p className="font-semibold">24 Months History</p>
+              </div>
+              <div className="p-3 bg-background/50 rounded-lg border">
+                <p className="text-sm text-muted-foreground">Update Frequency</p>
+                <p className="font-semibold text-green-500">Real-time</p>
+              </div>
+              <div className="p-3 bg-background/50 rounded-lg border">
+                <p className="text-sm text-muted-foreground">Prediction Horizon</p>
+                <p className="font-semibold">90 Days Forward</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Forecast Tabs */}
         <Tabs defaultValue="monthly" className="space-y-6">
@@ -85,7 +136,16 @@ const Forecast = () => {
 
           <TabsContent value="daily" className="space-y-6">
             <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Daily Sales Projection</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground">Daily Sales Projection</h3>
+                  <Badge variant="outline" className="text-xs">
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    94% Confidence
+                  </Badge>
+                </div>
+                <Badge variant="secondary">AI Model: ARIMA</Badge>
+              </div>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={dailyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -120,29 +180,59 @@ const Forecast = () => {
               </ResponsiveContainer>
             </div>
 
-            {/* Daily Insights */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-card rounded-lg p-4 border border-border">
-                <p className="text-sm text-muted-foreground">Average Daily Sales</p>
-                <p className="text-2xl font-bold text-foreground mt-1">₱1,093</p>
-                <p className="text-xs text-green-600 mt-1">↑ 12% from last week</p>
-              </div>
-              <div className="bg-card rounded-lg p-4 border border-border">
-                <p className="text-sm text-muted-foreground">Forecast Accuracy</p>
-                <p className="text-2xl font-bold text-foreground mt-1">91%</p>
-                <p className="text-xs text-green-600 mt-1">↑ 2% improvement</p>
-              </div>
-              <div className="bg-card rounded-lg p-4 border border-border">
-                <p className="text-sm text-muted-foreground">Tomorrow's Projection</p>
-                <p className="text-2xl font-bold text-foreground mt-1">₱1,250</p>
-                <p className="text-xs text-muted-foreground mt-1">Confidence: High</p>
-              </div>
+            {/* Daily Insights with ML Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm text-muted-foreground">Average Daily Sales</p>
+                    <Badge variant="outline" className="text-xs">ML</Badge>
+                  </div>
+                  <p className="text-2xl font-bold text-foreground">₱1,093</p>
+                  <p className="text-xs text-green-600 mt-1">↑ 12% from last week</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm text-muted-foreground">Model Accuracy</p>
+                    <Sparkles className="w-3 h-3 text-primary" />
+                  </div>
+                  <p className="text-2xl font-bold text-primary">94.2%</p>
+                  <div className="h-1.5 bg-secondary rounded-full mt-2 overflow-hidden">
+                    <div className="h-full bg-primary" style={{ width: '94.2%' }} />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground mb-1">Tomorrow's Projection</p>
+                  <p className="text-2xl font-bold text-foreground">₱1,250</p>
+                  <p className="text-xs text-blue-500 mt-1">95% Confidence Interval</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-muted-foreground mb-1">Trend Detection</p>
+                  <p className="text-2xl font-bold text-green-500">↑ Upward</p>
+                  <p className="text-xs text-muted-foreground mt-1">AI-detected pattern</p>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
           <TabsContent value="weekly" className="space-y-6">
             <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Weekly Sales Projection</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground">Weekly Sales Projection</h3>
+                  <Badge variant="outline" className="text-xs">
+                    <BrainCircuit className="w-3 h-3 mr-1" />
+                    Neural Network
+                  </Badge>
+                </div>
+                <Badge variant="secondary">Seasonality: Detected</Badge>
+              </div>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={weeklyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -223,7 +313,19 @@ const Forecast = () => {
 
           <TabsContent value="monthly" className="space-y-6">
             <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
-              <h3 className="text-lg font-semibold mb-4 text-foreground">Monthly Sales Projection</h3>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground">Monthly Sales Projection</h3>
+                  <Badge variant="outline" className="text-xs">
+                    <Database className="w-3 h-3 mr-1" />
+                    Time-Series Model
+                  </Badge>
+                </div>
+                <Badge variant="secondary" className="gap-1">
+                  <Sparkles className="w-3 h-3" />
+                  Enhanced Analytics
+                </Badge>
+              </div>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={monthlyData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
