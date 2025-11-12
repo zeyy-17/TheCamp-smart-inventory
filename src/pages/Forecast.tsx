@@ -3,11 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useState } from "react";
-import { BrainCircuit, Sparkles, TrendingUp, Zap, Database } from "lucide-react";
+import { BrainCircuit, Sparkles, TrendingUp, Zap, Database, Plus } from "lucide-react";
 
-const dailyData = [
+const initialDailyData = [
   { period: "Mon", actual: 850, forecast: 820 },
   { period: "Tue", actual: 920, forecast: 900 },
   { period: "Wed", actual: 780, forecast: 850 },
@@ -53,11 +56,53 @@ const monthlyProductTrends = [
 ];
 
 const Forecast = () => {
+  const [dailyData, setDailyData] = useState(initialDailyData);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState("");
+  const [salesAmount, setSalesAmount] = useState("");
+
+  const calculateForecast = (data: typeof dailyData) => {
+    const lastThree = data.slice(-3).map(d => d.actual);
+    const average = lastThree.reduce((sum, val) => sum + val, 0) / lastThree.length;
+    return Math.round(average * 1.05);
+  };
+
+  const handleAddSales = () => {
+    if (!selectedDay || !salesAmount) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    const amount = parseFloat(salesAmount);
+    if (isNaN(amount) || amount < 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    const updatedData = dailyData.map(day => {
+      if (day.period === selectedDay) {
+        return { ...day, actual: amount, forecast: calculateForecast(dailyData) };
+      }
+      return day;
+    });
+
+    setDailyData(updatedData);
+    setIsDialogOpen(false);
+    setSelectedDay("");
+    setSalesAmount("");
+    toast.success("Daily sales updated successfully!");
+  };
+
   const handleExport = () => {
     toast.success("Report exported successfully!");
   };
 
   const handleGenerateForecast = () => {
+    const updatedData = dailyData.map(day => ({
+      ...day,
+      forecast: calculateForecast(dailyData)
+    }));
+    setDailyData(updatedData);
     toast.success("Forecast generated successfully!");
   };
 
@@ -144,7 +189,55 @@ const Forecast = () => {
                     94% Confidence
                   </Badge>
                 </div>
-                <Badge variant="secondary">AI Model: ARIMA</Badge>
+                <div className="flex items-center gap-2">
+                  <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Add Daily Sales
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Daily Sales</DialogTitle>
+                        <DialogDescription>
+                          Enter the sales data for a specific day to update the forecast projection.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                          <Label htmlFor="day">Day</Label>
+                          <select
+                            id="day"
+                            value={selectedDay}
+                            onChange={(e) => setSelectedDay(e.target.value)}
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <option value="">Select a day</option>
+                            {dailyData.map(day => (
+                              <option key={day.period} value={day.period}>{day.period}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label htmlFor="amount">Sales Amount (₱)</Label>
+                          <Input
+                            id="amount"
+                            type="number"
+                            placeholder="Enter sales amount"
+                            value={salesAmount}
+                            onChange={(e) => setSalesAmount(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                        <Button onClick={handleAddSales}>Save Sales</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                  <Badge variant="secondary">AI Model: ARIMA</Badge>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={dailyData}>
