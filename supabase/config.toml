@@ -1,1 +1,13 @@
 project_id = "biefwlrmuepcfxswdpkj"
+
+[functions.categories]
+verify_jwt = false
+
+[functions.suppliers]
+verify_jwt = false
+
+[functions.products]
+verify_jwt = false
+
+[functions.movements]
+verify_jwt = false
