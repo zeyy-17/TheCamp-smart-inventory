@@ -4,169 +4,208 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useState, useEffect } from "react";
-import { productSchema } from "@/lib/validation";
 import { toast } from "sonner";
-import { z } from "zod";
-
-interface Product {
-  id: number;
-  name: string;
-  category: string;
-  quantity: number;
-  reorderPoint: number;
-  status: string;
-  lastUpdated: string;
-}
+import { productsApi, categoriesApi, suppliersApi } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 
 interface EditProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  product: Product | null;
-  onEdit: (id: number, product: Partial<Product>) => void;
+  product: any;
+  onSuccess?: () => void;
 }
 
-const categories = ["Beers", "Tequila", "Vodka", "Rum", "Gin", "Wine", "Whisky", "Cognac", "Single Malt", "Liquer"];
-
-export const EditProductDialog = ({ open, onOpenChange, product, onEdit }: EditProductDialogProps) => {
+export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: EditProductDialogProps) => {
   const [formData, setFormData] = useState({
     name: "",
-    category: "",
+    sku: "",
+    category_id: "",
+    supplier_id: "",
+    cost_price: "",
+    retail_price: "",
     quantity: "",
-    reorderPoint: "",
+    reorder_level: "",
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data: categories = [] } = useQuery<any[]>({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getAll(),
+  });
+
+  const { data: suppliers = [] } = useQuery<any[]>({
+    queryKey: ['suppliers'],
+    queryFn: () => suppliersApi.getAll(),
+  });
 
   useEffect(() => {
     if (product) {
       setFormData({
-        name: product.name,
-        category: product.category,
-        quantity: product.quantity.toString(),
-        reorderPoint: product.reorderPoint.toString(),
+        name: product.name || "",
+        sku: product.sku || "",
+        category_id: product.category_id?.toString() || "",
+        supplier_id: product.supplier_id?.toString() || "",
+        cost_price: product.cost_price?.toString() || "",
+        retail_price: product.retail_price?.toString() || "",
+        quantity: product.quantity?.toString() || "",
+        reorder_level: product.reorder_level?.toString() || "",
       });
-      setErrors({});
     }
   }, [product]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!product) return;
-    setErrors({});
     
+    setIsSubmitting(true);
+
     try {
-      const quantity = parseInt(formData.quantity);
-      const reorderPoint = parseInt(formData.reorderPoint);
-      
-      // Validate with Zod
-      const validatedData = productSchema.parse({
+      await productsApi.update(product.id, {
         name: formData.name,
-        category: formData.category,
-        quantity,
-        reorderPoint,
+        sku: formData.sku,
+        category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
+        supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : undefined,
+        cost_price: parseFloat(formData.cost_price),
+        retail_price: parseFloat(formData.retail_price),
+        quantity: parseInt(formData.quantity),
+        reorder_level: parseInt(formData.reorder_level),
       });
-      
-      const status = validatedData.quantity <= validatedData.reorderPoint 
-        ? (validatedData.quantity < validatedData.reorderPoint * 0.5 ? "Critical" : "Low Stock") 
-        : "In Stock";
-      
-      onEdit(product.id, {
-        name: validatedData.name,
-        category: validatedData.category,
-        quantity: validatedData.quantity,
-        reorderPoint: validatedData.reorderPoint,
-        status,
-        lastUpdated: "Just now",
-      });
-      
-      onOpenChange(false);
+
       toast.success("Product updated successfully");
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const fieldErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            fieldErrors[err.path[0].toString()] = err.message;
-          }
-        });
-        setErrors(fieldErrors);
-        toast.error("Please fix the validation errors");
-      }
+      if (onSuccess) onSuccess();
+      onOpenChange(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update product");
+      console.error(error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="edit-name">Product Name</Label>
-            <Input
-              id="edit-name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              maxLength={100}
-              required
-            />
-            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-name">Product Name*</Label>
+              <Input
+                id="edit-name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-sku">SKU*</Label>
+              <Input
+                id="edit-sku"
+                value={formData.sku}
+                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                required
+              />
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="edit-category">Category</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData({ ...formData, category: value })}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.category && <p className="text-sm text-destructive">{errors.category}</p>}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-category">Category</Label>
+              <Select
+                value={formData.category_id}
+                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat: any) => (
+                    <SelectItem key={cat.id} value={cat.id.toString()}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-supplier">Supplier</Label>
+              <Select
+                value={formData.supplier_id}
+                onValueChange={(value) => setFormData({ ...formData, supplier_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  {suppliers.map((sup: any) => (
+                    <SelectItem key={sup.id} value={sup.id.toString()}>
+                      {sup.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="edit-quantity">Quantity</Label>
-            <Input
-              id="edit-quantity"
-              type="number"
-              min="0"
-              max="1000000"
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              required
-            />
-            {errors.quantity && <p className="text-sm text-destructive">{errors.quantity}</p>}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-cost_price">Cost Price (₱)*</Label>
+              <Input
+                id="edit-cost_price"
+                type="number"
+                step="0.01"
+                value={formData.cost_price}
+                onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-retail_price">Retail Price (₱)*</Label>
+              <Input
+                id="edit-retail_price"
+                type="number"
+                step="0.01"
+                value={formData.retail_price}
+                onChange={(e) => setFormData({ ...formData, retail_price: e.target.value })}
+                required
+              />
+            </div>
           </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="edit-reorderPoint">Reorder Point</Label>
-            <Input
-              id="edit-reorderPoint"
-              type="number"
-              min="0"
-              max="100000"
-              value={formData.reorderPoint}
-              onChange={(e) => setFormData({ ...formData, reorderPoint: e.target.value })}
-              required
-            />
-            {errors.reorderPoint && <p className="text-sm text-destructive">{errors.reorderPoint}</p>}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-quantity">Quantity</Label>
+              <Input
+                id="edit-quantity"
+                type="number"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-reorder_level">Reorder Level</Label>
+              <Input
+                id="edit-reorder_level"
+                type="number"
+                value={formData.reorder_level}
+                onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
+              />
+            </div>
           </div>
-          
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Updating..." : "Update Product"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
