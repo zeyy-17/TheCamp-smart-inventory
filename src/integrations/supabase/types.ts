@@ -17,71 +17,103 @@ export type Database = {
       categories: {
         Row: {
           created_at: string | null
-          id: string
+          id: number
           name: string
         }
         Insert: {
           created_at?: string | null
-          id?: string
+          id?: number
           name: string
         }
         Update: {
           created_at?: string | null
-          id?: string
+          id?: number
           name?: string
         }
         Relationships: []
       }
-      items: {
+      movements: {
         Row: {
-          category_id: string
+          created_at: string | null
+          id: number
+          product_id: number | null
+          qty_change: number
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          product_id?: number | null
+          qty_change: number
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          product_id?: number | null
+          qty_change?: number
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category_id: number | null
           cost_price: number
           created_at: string | null
-          current_stock: number
-          id: string
+          id: number
           name: string
-          reorder_point: number | null
-          selling_price: number
-          supplier_id: string | null
-          unit: string
+          quantity: number | null
+          reorder_level: number | null
+          retail_price: number
+          sku: string
+          supplier_id: number | null
           updated_at: string | null
         }
         Insert: {
-          category_id: string
+          category_id?: number | null
           cost_price: number
           created_at?: string | null
-          current_stock?: number
-          id?: string
+          id?: number
           name: string
-          reorder_point?: number | null
-          selling_price: number
-          supplier_id?: string | null
-          unit: string
+          quantity?: number | null
+          reorder_level?: number | null
+          retail_price: number
+          sku: string
+          supplier_id?: number | null
           updated_at?: string | null
         }
         Update: {
-          category_id?: string
+          category_id?: number | null
           cost_price?: number
           created_at?: string | null
-          current_stock?: number
-          id?: string
+          id?: number
           name?: string
-          reorder_point?: number | null
-          selling_price?: number
-          supplier_id?: string | null
-          unit?: string
+          quantity?: number | null
+          reorder_level?: number | null
+          retail_price?: number
+          sku?: string
+          supplier_id?: number | null
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "items_category_id_fkey"
+            foreignKeyName: "products_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "items_supplier_id_fkey"
+            foreignKeyName: "products_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
@@ -93,122 +125,58 @@ export type Database = {
         Row: {
           created_at: string | null
           date_sold: string
-          id: string
-          item_id: string
+          id: number
+          product_id: number | null
           quantity: number
           total_amount: number
         }
         Insert: {
           created_at?: string | null
           date_sold: string
-          id?: string
-          item_id: string
+          id?: number
+          product_id?: number | null
           quantity: number
           total_amount: number
         }
         Update: {
           created_at?: string | null
           date_sold?: string
-          id?: string
-          item_id?: string
+          id?: number
+          product_id?: number | null
           quantity?: number
           total_amount?: number
         }
         Relationships: [
           {
-            foreignKeyName: "sales_item_id_fkey"
-            columns: ["item_id"]
+            foreignKeyName: "sales_product_id_fkey"
+            columns: ["product_id"]
             isOneToOne: false
-            referencedRelation: "items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stock_in: {
-        Row: {
-          created_at: string | null
-          date_received: string
-          id: string
-          item_id: string
-          quantity: number
-        }
-        Insert: {
-          created_at?: string | null
-          date_received: string
-          id?: string
-          item_id: string
-          quantity: number
-        }
-        Update: {
-          created_at?: string | null
-          date_received?: string
-          id?: string
-          item_id?: string
-          quantity?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stock_in_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      stock_out: {
-        Row: {
-          created_at: string | null
-          date_used: string
-          id: string
-          item_id: string
-          quantity: number
-        }
-        Insert: {
-          created_at?: string | null
-          date_used: string
-          id?: string
-          item_id: string
-          quantity: number
-        }
-        Update: {
-          created_at?: string | null
-          date_used?: string
-          id?: string
-          item_id?: string
-          quantity?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "stock_out_item_id_fkey"
-            columns: ["item_id"]
-            isOneToOne: false
-            referencedRelation: "items"
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
       }
       suppliers: {
         Row: {
-          contact: string | null
+          contact_email: string | null
+          contact_phone: string | null
           created_at: string | null
-          id: string
+          id: number
           name: string
-          phone: string | null
         }
         Insert: {
-          contact?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string | null
-          id?: string
+          id?: number
           name: string
-          phone?: string | null
         }
         Update: {
-          contact?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
           created_at?: string | null
-          id?: string
+          id?: number
           name?: string
-          phone?: string | null
         }
         Relationships: []
       }
