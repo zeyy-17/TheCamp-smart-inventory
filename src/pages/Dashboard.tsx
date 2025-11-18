@@ -2,6 +2,7 @@ import { DashboardCard } from "@/components/DashboardCard";
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { TopProductsTable } from "@/components/TopProductsTable";
 import { InsightCard } from "@/components/InsightCard";
+import { InventoryAlerts } from "@/components/InventoryAlerts";
 import { Package, TrendingUp, DollarSign, AlertTriangle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -81,7 +82,11 @@ const Dashboard = () => {
   };
 
   const handleStockAlert = () => {
-    setReorderDialogOpen(true);
+    navigate("/inventory?filter=low-stock");
+  };
+
+  const handleOutOfStock = () => {
+    navigate("/inventory?filter=out-of-stock");
   };
 
   const handleViewForecast = () => {
@@ -120,6 +125,9 @@ const Dashboard = () => {
           </div>
         </div>
 
+        {/* Inventory Alerts */}
+        <InventoryAlerts />
+
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <DashboardCard
@@ -127,12 +135,15 @@ const Dashboard = () => {
             value={productsCount?.toString() || "0"}
             subtitle="Active items"
             icon={Package}
+            onClick={handleReorderOpportunity}
           />
           <DashboardCard
             title="Low Stock Alerts"
             value={lowStockCount?.toString() || "0"}
             subtitle="Require attention"
             icon={AlertTriangle}
+            onClick={handleStockAlert}
+            variant="warning"
           />
           <DashboardCard
             title="Weekly Sales"

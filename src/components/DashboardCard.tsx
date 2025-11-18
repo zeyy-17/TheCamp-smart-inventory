@@ -11,6 +11,8 @@ interface DashboardCardProps {
   };
   icon: LucideIcon;
   className?: string;
+  onClick?: () => void;
+  variant?: 'default' | 'warning' | 'destructive';
 }
 
 export const DashboardCard = ({
@@ -20,13 +22,24 @@ export const DashboardCard = ({
   trend,
   icon: Icon,
   className,
+  onClick,
+  variant = 'default'
 }: DashboardCardProps) => {
+  const variantClasses = {
+    default: '',
+    warning: 'hover:border-warning/50',
+    destructive: 'hover:border-destructive/50'
+  };
+
   return (
     <div
       className={cn(
-        "bg-card rounded-xl p-6 shadow-custom-md border border-border animate-slide-in",
+        "bg-card rounded-xl p-6 shadow-custom-md border border-border animate-slide-in transition-all duration-300",
+        onClick ? "cursor-pointer hover:shadow-custom-lg hover:scale-105" : "",
+        variantClasses[variant],
         className
       )}
+      onClick={onClick}
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
