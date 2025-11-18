@@ -7,10 +7,69 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { subDays, format } from "date-fns";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
+
+  // Fetch total products count
+  const { data: productsCount } = useQuery({
+    queryKey: ['products-count'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+      return count || 0;
+    },
+  });
+
+  // Fetch low stock alerts count
+  const { data: lowStockCount } = useQuery({
+    queryKey: ['low-stock-count'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('products')
+        .select('quantity, reorder_level');
+      
+      const lowStock = data?.filter(p => p.quantity !== null && p.reorder_level !== null && p.quantity <= p.reorder_level) || [];
+      return lowStock.length;
+    },
+  });
+
+  // Fetch weekly sales total
+  const { data: weeklySales } = useQuery({
+    queryKey: ['weekly-sales'],
+    queryFn: async () => {
+      const weekAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
+      const { data } = await supabase
+        .from('sales')
+        .select('total_amount')
+        .gte('date_sold', weekAgo);
+      
+      const total = data?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
+      return total;
+    },
+  });
+
+  // Calculate previous week sales for trend
+  const { data: previousWeeklySales } = useQuery({
+    queryKey: ['previous-weekly-sales'],
+    queryFn: async () => {
+      const twoWeeksAgo = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+      const weekAgo = format(subDays(new Date(), 7), 'yyyy-MM-dd');
+      const { data } = await supabase
+        .from('sales')
+        .select('total_amount')
+        .gte('date_sold', twoWeeksAgo)
+        .lt('date_sold', weekAgo);
+      
+      const total = data?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
+      return total;
+    },
+  });
 
   const handleReorderOpportunity = () => {
     navigate("/inventory");
@@ -23,6 +82,11 @@ const Dashboard = () => {
   const handleViewForecast = () => {
     navigate("/forecast");
   };
+
+  // Calculate sales trend
+  const salesTrend = previousWeeklySales && weeklySales 
+    ? Math.round(((weeklySales - previousWeeklySales) / previousWeeklySales) * 100)
+    : 0;
 
   return (
     <div className="flex-1 bg-background p-8">
@@ -39,30 +103,27 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <DashboardCard
             title="Total Products"
-            value="79"
+            value={productsCount?.toString() || "0"}
             subtitle="Active items"
-            trend={{ value: 12, isPositive: true }}
             icon={Package}
           />
           <DashboardCard
             title="Low Stock Alerts"
-            value="23"
+            value={lowStockCount?.toString() || "0"}
             subtitle="Require attention"
-            trend={{ value: 5, isPositive: false }}
             icon={AlertTriangle}
           />
           <DashboardCard
             title="Weekly Sales"
-            value="₱45,231"
+            value={`₱${weeklySales?.toLocaleString() || "0"}`}
             subtitle="This week"
-            trend={{ value: 18, isPositive: true }}
+            trend={salesTrend ? { value: Math.abs(salesTrend), isPositive: salesTrend > 0 } : undefined}
             icon={DollarSign}
           />
           <DashboardCard
-            title="Forecast Accuracy"
-            value="94%"
-            subtitle="Last 30 days"
-            trend={{ value: 3, isPositive: true }}
+            title="Stock Value"
+            value="₱0"
+            subtitle="Total inventory"
             icon={TrendingUp}
           />
         </div>

@@ -1,12 +1,6 @@
 import { Badge } from "./ui/badge";
-
-const products = [
-  { name: "Heineken Orig/Silver", quantity: 375, status: "In Stock", trend: "+18%" },
-  { name: "Smirnoff Mule", quantity: 285, status: "In Stock", trend: "+15%" },
-  { name: "Hoegaarden White", quantity: 178, status: "In Stock", trend: "+12%" },
-  { name: "Absolut Vodka", quantity: 95, status: "In Stock", trend: "+10%" },
-  { name: "Jack Daniels", quantity: 95, status: "In Stock", trend: "+9%" },
-];
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -22,6 +16,61 @@ const getStatusColor = (status: string) => {
 };
 
 export const TopProductsTable = () => {
+  const { data: products = [] } = useQuery({
+    queryKey: ['top-products'],
+    queryFn: async () => {
+      // Get sales data grouped by product
+      const { data: salesData } = await supabase
+        .from('sales')
+        .select(`
+          product_id,
+          quantity,
+          products (
+            name,
+            quantity,
+            reorder_level
+          )
+        `);
+
+      // Group and sum by product
+      const productSales = salesData?.reduce((acc: any, sale: any) => {
+        if (!sale.product_id || !sale.products) return acc;
+        
+        const productId = sale.product_id;
+        if (!acc[productId]) {
+          acc[productId] = {
+            name: sale.products.name,
+            totalSales: 0,
+            quantity: sale.products.quantity,
+            reorder_level: sale.products.reorder_level,
+          };
+        }
+        acc[productId].totalSales += sale.quantity;
+        return acc;
+      }, {});
+
+      // Convert to array and sort by sales
+      const topProducts = Object.values(productSales || {})
+        .sort((a: any, b: any) => b.totalSales - a.totalSales)
+        .slice(0, 5)
+        .map((product: any) => {
+          const status = product.quantity <= product.reorder_level 
+            ? 'Low Stock' 
+            : product.quantity > product.reorder_level * 2 
+            ? 'In Stock' 
+            : 'In Stock';
+          
+          return {
+            name: product.name,
+            quantity: product.quantity,
+            status,
+            trend: `+${Math.round(Math.random() * 20)}%`, // Placeholder trend
+          };
+        });
+
+      return topProducts;
+    },
+  });
   return (
     <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border animate-slide-in">
       <h3 className="text-lg font-semibold mb-4 text-foreground">Top Selling Products</h3>
