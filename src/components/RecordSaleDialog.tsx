@@ -98,8 +98,11 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['products-count'] });
       queryClient.invalidateQueries({ queryKey: ['weekly-sales'] });
+      queryClient.invalidateQueries({ queryKey: ['weekly-sales-chart'] });
       queryClient.invalidateQueries({ queryKey: ['top-products'] });
       queryClient.invalidateQueries({ queryKey: ['products-for-sale'] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-history'] });
       form.reset();
       setSelectedProduct(null);
       onOpenChange(false);
