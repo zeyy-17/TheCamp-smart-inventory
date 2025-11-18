@@ -2,20 +2,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
 import { toast } from "sonner";
 import { productsApi, categoriesApi } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
 
 const Inventory = () => {
+  const [searchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  // Handle URL filter parameter
+  useEffect(() => {
+    const filter = searchParams.get('filter');
+    if (filter) {
+      setStatusFilter(filter);
+    }
+  }, [searchParams]);
 
   // Fetch categories
   const { data: categories = [] } = useQuery<any[]>({
@@ -29,13 +40,23 @@ const Inventory = () => {
     queryFn: () => productsApi.getAll(),
   });
 
-  const categoryNames = ["All", ...categories.map((c: any) => c.name)];
+  // Get unique category names
+  const categoryNames = ["All", ...Array.from(new Set(categories.map((c: any) => c.name)))];
 
   const filteredItems = products.filter((item: any) => {
     const matchesCategory = selectedCategory === "All" || item.category?.name === selectedCategory;
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          item.sku?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    
+    // Apply status filter if present
+    let matchesStatus = true;
+    if (statusFilter === 'out-of-stock') {
+      matchesStatus = item.quantity === 0;
+    } else if (statusFilter === 'low-stock') {
+      matchesStatus = item.quantity > 0 && item.quantity <= item.reorder_level;
+    }
+    
+    return matchesCategory && matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (quantity: number, reorderPoint: number) => {
@@ -100,24 +121,48 @@ const Inventory = () => {
         </Button>
       </div>
 
+      {/* Active Filter Badge */}
+      {statusFilter && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-sm">
+            Filter: {statusFilter === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}
+          </Badge>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setStatusFilter(null)}
+          >
+            Clear Filter
+          </Button>
+        </div>
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-card p-6 rounded-xl shadow-custom-md border border-border">
           <div className="text-sm text-muted-foreground mb-2">Total Products</div>
           <div className="text-3xl font-bold text-foreground">{products.length}</div>
         </div>
-        <div className="bg-card p-6 rounded-xl shadow-custom-md border border-border">
+        <Button 
+          variant="outline"
+          className="bg-card p-6 rounded-xl shadow-custom-md border border-border hover:bg-warning/10 h-auto flex flex-col items-start transition-all w-full"
+          onClick={() => setStatusFilter('low-stock')}
+        >
           <div className="text-sm text-muted-foreground mb-2">Low Stock Items</div>
-          <div className="text-3xl font-bold text-yellow-600">
+          <div className="text-3xl font-bold text-warning">
             {products.filter((item: any) => item.quantity > 0 && item.quantity <= item.reorder_level).length}
           </div>
-        </div>
-        <div className="bg-card p-6 rounded-xl shadow-custom-md border border-border">
+        </Button>
+        <Button 
+          variant="outline"
+          className="bg-card p-6 rounded-xl shadow-custom-md border border-border hover:bg-destructive/10 h-auto flex flex-col items-start transition-all w-full"
+          onClick={() => setStatusFilter('out-of-stock')}
+        >
           <div className="text-sm text-muted-foreground mb-2">Out of Stock</div>
-          <div className="text-3xl font-bold text-red-600">
+          <div className="text-3xl font-bold text-destructive">
             {products.filter((item: any) => item.quantity === 0).length}
           </div>
-        </div>
+        </Button>
         <div className="bg-card p-6 rounded-xl shadow-custom-md border border-border">
           <div className="text-sm text-muted-foreground mb-2">Total Value</div>
           <div className="text-3xl font-bold text-foreground">

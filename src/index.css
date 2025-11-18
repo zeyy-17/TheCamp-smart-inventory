@@ -70,6 +70,10 @@ All colors MUST be HSL.
     --shadow-lg: 0 10px 15px -3px hsl(30 15% 20% / 0.1);
   }
 
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+
   .dark {
     --background: 30 15% 12%;
     --foreground: 35 25% 96%;
