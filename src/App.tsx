@@ -11,6 +11,7 @@ import Inventory from "./pages/Inventory";
 import Forecast from "./pages/Forecast";
 import Insights from "./pages/Insights";
 import Reports from "./pages/Reports";
+import SalesHistory from "./pages/SalesHistory";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const AppRoutes = () => {
                 <Route path="/forecast" element={<Forecast />} />
                 <Route path="/insights" element={<Insights />} />
                 <Route path="/reports" element={<Reports />} />
+                <Route path="/sales-history" element={<SalesHistory />} />
                 <Route path="/account" element={<Account />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
