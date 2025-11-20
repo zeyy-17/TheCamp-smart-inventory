@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Sidebar } from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { ScrollToTop } from "./components/ScrollToTop";
+import { ScrollToTopButton } from "./components/ScrollToTopButton";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Forecast from "./pages/Forecast";
@@ -60,6 +62,8 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollToTop />
+          <ScrollToTopButton />
           <AppRoutes />
         </BrowserRouter>
       </TooltipProvider>
