@@ -7,10 +7,6 @@ All colors MUST be HSL.
 */
 
 @layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
   :root {
     /* Warm Professional Palette */
     --background: 35 25% 96%;
