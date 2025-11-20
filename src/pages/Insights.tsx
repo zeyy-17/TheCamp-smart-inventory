@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
 import { AdjustForecastDialog } from "@/components/AdjustForecastDialog";
 import { SeasonalAnalysisDialog } from "@/components/SeasonalAnalysisDialog";
@@ -21,6 +22,7 @@ interface Insight {
 }
 
 const Insights = () => {
+  const navigate = useNavigate();
   const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
   const [adjustForecastOpen, setAdjustForecastOpen] = useState(false);
   const [seasonalAnalysisOpen, setSeasonalAnalysisOpen] = useState(false);
@@ -89,7 +91,7 @@ const Insights = () => {
   const handleAction = (actionType: string) => {
     switch (actionType) {
       case "Create Purchase Order":
-        setPurchaseOrderOpen(true);
+        navigate('/purchase-orders');
         break;
       case "Adjust Forecast":
         setAdjustForecastOpen(true);

@@ -11,6 +11,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CreatePurchaseOrderDialogProps {
   open: boolean;
@@ -19,14 +22,38 @@ interface CreatePurchaseOrderDialogProps {
 
 export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchaseOrderDialogProps) => {
   const [formData, setFormData] = useState({
-    productName: "",
+    productId: "",
     quantity: "",
-    supplier: "",
+    supplierId: "",
   });
   const [deliveryDate, setDeliveryDate] = useState<Date>();
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { data: products } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, name, sku')
+        .order('name');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const { data: suppliers } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('name');
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
     
@@ -38,30 +65,31 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         toast.error("Please select a delivery date");
         return;
       }
+
+      if (!formData.productId || !formData.supplierId) {
+        toast.error("Please select product and supplier");
+        return;
+      }
       
-      // Validate with Zod
-      const validatedData = purchaseOrderSchema.parse({
-        productName: formData.productName,
-        quantity,
-        supplier: formData.supplier,
-        deliveryDate,
-      });
+      const { error } = await supabase
+        .from('purchase_orders')
+        .insert({
+          product_id: parseInt(formData.productId),
+          supplier_id: parseInt(formData.supplierId),
+          quantity,
+          expected_delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
+          status: 'pending'
+        });
+
+      if (error) throw error;
       
       toast.success("Purchase order created successfully!");
       onOpenChange(false);
-      setFormData({ productName: "", quantity: "", supplier: "" });
+      setFormData({ productId: "", quantity: "", supplierId: "" });
       setDeliveryDate(undefined);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        const fieldErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            fieldErrors[err.path[0].toString()] = err.message;
-          }
-        });
-        setErrors(fieldErrors);
-        toast.error("Please fix the validation errors");
-      }
+      console.error('Error creating purchase order:', error);
+      toast.error("Failed to create purchase order");
     }
   };
 
@@ -73,15 +101,23 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="productName">Product Name</Label>
-            <Input
-              id="productName"
-              value={formData.productName}
-              onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-              maxLength={100}
-              required
-            />
-            {errors.productName && <p className="text-sm text-destructive">{errors.productName}</p>}
+            <Label htmlFor="product">Product</Label>
+            <Select
+              value={formData.productId}
+              onValueChange={(value) => setFormData({ ...formData, productId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select product" />
+              </SelectTrigger>
+              <SelectContent>
+                {products?.map((product) => (
+                  <SelectItem key={product.id} value={product.id.toString()}>
+                    {product.name} ({product.sku})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.productId && <p className="text-sm text-destructive">{errors.productId}</p>}
           </div>
           
           <div className="space-y-2">
@@ -100,14 +136,22 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
           
           <div className="space-y-2">
             <Label htmlFor="supplier">Supplier</Label>
-            <Input
-              id="supplier"
-              value={formData.supplier}
-              onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
-              maxLength={100}
-              required
-            />
-            {errors.supplier && <p className="text-sm text-destructive">{errors.supplier}</p>}
+            <Select
+              value={formData.supplierId}
+              onValueChange={(value) => setFormData({ ...formData, supplierId: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select supplier" />
+              </SelectTrigger>
+              <SelectContent>
+                {suppliers?.map((supplier) => (
+                  <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                    {supplier.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.supplierId && <p className="text-sm text-destructive">{errors.supplierId}</p>}
           </div>
           
           <div className="space-y-2">
