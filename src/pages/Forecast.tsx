@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useState } from "react";
 import { BrainCircuit, Sparkles, TrendingUp, Zap, Database, Plus } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const initialDailyData = [
   { period: "Mon", actual: 850, forecast: 820 },
@@ -60,6 +61,7 @@ const Forecast = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("");
   const [salesAmount, setSalesAmount] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const calculateForecast = (data: typeof dailyData) => {
     const lastThree = data.slice(-3).map(d => d.actual);
@@ -93,17 +95,37 @@ const Forecast = () => {
     toast.success("Daily sales updated successfully!");
   };
 
-  const handleExport = () => {
-    toast.success("Report exported successfully!");
+  const handleGenerateForecast = async () => {
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-forecast');
+      
+      if (error) {
+        if (error.message?.includes('429')) {
+          toast.error("Rate limit exceeded. Please try again later.");
+        } else if (error.message?.includes('402')) {
+          toast.error("Payment required. Please add credits to your workspace.");
+        } else {
+          toast.error("Failed to generate forecast");
+        }
+        return;
+      }
+
+      if (data?.dailyForecast) {
+        setDailyData(data.dailyForecast);
+      }
+      
+      toast.success("AI Forecast generated successfully!");
+    } catch (error) {
+      console.error('Forecast generation error:', error);
+      toast.error("Failed to generate forecast");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const handleGenerateForecast = () => {
-    const updatedData = dailyData.map(day => ({
-      ...day,
-      forecast: calculateForecast(dailyData)
-    }));
-    setDailyData(updatedData);
-    toast.success("Forecast generated successfully!");
+  const handleExport = () => {
+    toast.success("Report exported successfully!");
   };
 
   return (

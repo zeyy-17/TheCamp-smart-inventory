@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, TrendingUp, Lightbulb, BarChart3, Receipt, User } from "lucide-react";
+import { LayoutDashboard, Package, TrendingUp, Lightbulb, BarChart3, Receipt, User, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/the-camp-logo.jpg";
@@ -8,8 +8,9 @@ const navigation = [
   { name: "Inventory", href: "/inventory", icon: Package },
   { name: "Sales Forecast", href: "/forecast", icon: TrendingUp },
   { name: "Smart Insights", href: "/insights", icon: Lightbulb },
-  { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Sales History", href: "/sales-history", icon: Receipt },
+  { name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart },
+  { name: "Reports", href: "/reports", icon: BarChart3 },
   { name: "Account", href: "/account", icon: User },
 ];
 

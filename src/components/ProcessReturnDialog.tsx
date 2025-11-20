@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,21 +40,18 @@ export const ProcessReturnDialog = ({ open, onOpenChange }: ProcessReturnDialogP
     },
   });
 
-  // Fetch recent sales (last 30 days)
+  // Fetch recent sales (last 5 transactions)
   const { data: recentSales = [] } = useQuery({
     queryKey: ['recent-sales'],
     queryFn: async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
       const { data, error } = await supabase
         .from('sales')
         .select(`
           *,
           product:products(*)
         `)
-        .gte('date_sold', format(thirtyDaysAgo, 'yyyy-MM-dd'))
-        .order('date_sold', { ascending: false });
+        .order('date_sold', { ascending: false })
+        .limit(5);
       
       if (error) throw error;
       return data;
@@ -129,10 +126,9 @@ export const ProcessReturnDialog = ({ open, onOpenChange }: ProcessReturnDialogP
     processReturnMutation.mutate(values);
   };
 
-  const handleSaleChange = (saleId: string) => {
-    const sale = recentSales.find(s => s.id === parseInt(saleId));
+  const handleSelectSale = (sale: any) => {
     setSelectedSale(sale);
-    form.setValue('sale_id', saleId);
+    form.setValue('sale_id', sale.id.toString());
     form.setValue('quantity', 1);
   };
 
@@ -147,7 +143,7 @@ export const ProcessReturnDialog = ({ open, onOpenChange }: ProcessReturnDialogP
         <DialogHeader>
           <DialogTitle>Process Return/Refund</DialogTitle>
           <DialogDescription>
-            Select a recent sale to process a return and add inventory back.
+            Select from the last 5 transactions to process a return
           </DialogDescription>
         </DialogHeader>
 
@@ -158,21 +154,43 @@ export const ProcessReturnDialog = ({ open, onOpenChange }: ProcessReturnDialogP
               name="sale_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Sale Transaction</FormLabel>
-                  <Select onValueChange={handleSaleChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a sale to return" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {recentSales.map((sale) => (
-                        <SelectItem key={sale.id} value={sale.id.toString()}>
-                          {format(new Date(sale.date_sold), 'MMM dd, yyyy')} - {sale.product?.name} (Qty: {sale.quantity}) - ₱{sale.total_amount.toLocaleString()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <FormLabel>Recent Transactions (Last 5)</FormLabel>
+                  <div className="space-y-2">
+                    {recentSales.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No recent sales found</p>
+                    ) : (
+                      recentSales.map((sale) => (
+                        <div
+                          key={sale.id}
+                          className={cn(
+                            "flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-colors",
+                            selectedSale?.id === sale.id 
+                              ? "bg-primary/10 border-primary" 
+                              : "hover:bg-accent"
+                          )}
+                          onClick={() => handleSelectSale(sale)}
+                        >
+                          <div className="flex-1">
+                            <div className="font-medium">{sale.product?.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {format(new Date(sale.date_sold), 'MMM dd, yyyy')} • Qty: {sale.quantity} • ₱{sale.total_amount.toLocaleString()}
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSelectSale(sale);
+                            }}
+                          >
+                            Select
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

@@ -1,0 +1,131 @@
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
+import { Plus, Package } from 'lucide-react';
+import { format } from 'date-fns';
+
+const PurchaseOrders = () => {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const { data: orders, isLoading } = useQuery({
+    queryKey: ['purchase-orders'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('purchase_orders')
+        .select(`
+          *,
+          products(name, sku),
+          suppliers(name, contact_email, contact_phone)
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    }
+  });
+
+  const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case 'pending': return 'secondary';
+      case 'received': return 'default';
+      case 'cancelled': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
+  return (
+    <main className="flex-1 overflow-y-auto bg-background p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Purchase Orders</h1>
+            <p className="text-muted-foreground">Track and manage your pre-ordered stocks</p>
+          </div>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Order
+          </Button>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Package className="h-5 w-5 text-primary" />
+              <CardTitle>All Purchase Orders</CardTitle>
+            </div>
+            <CardDescription>View all your purchase orders with supplier details</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoading ? (
+              <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
+            ) : !orders || orders.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No purchase orders found. Create your first order to get started.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Order ID</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>SKU</TableHead>
+                      <TableHead>Supplier</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Expected Delivery</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Notes</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order: any) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">#{order.id}</TableCell>
+                        <TableCell>{order.products?.name || 'N/A'}</TableCell>
+                        <TableCell className="text-muted-foreground">{order.products?.sku || 'N/A'}</TableCell>
+                        <TableCell>{order.suppliers?.name || 'N/A'}</TableCell>
+                        <TableCell className="text-sm">
+                          {order.suppliers?.contact_email && (
+                            <div>{order.suppliers.contact_email}</div>
+                          )}
+                          {order.suppliers?.contact_phone && (
+                            <div className="text-muted-foreground">{order.suppliers.contact_phone}</div>
+                          )}
+                        </TableCell>
+                        <TableCell>{order.quantity}</TableCell>
+                        <TableCell>
+                          {format(new Date(order.expected_delivery_date), 'MMM dd, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                          {order.notes || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <CreatePurchaseOrderDialog 
+          open={dialogOpen} 
+          onOpenChange={setDialogOpen}
+        />
+      </div>
+    </main>
+  );
+};
+
+export default PurchaseOrders;
