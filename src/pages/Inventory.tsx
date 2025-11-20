@@ -5,6 +5,7 @@ import { Search, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { productsApi, categoriesApi } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,6 +19,8 @@ const Inventory = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
   // Handle URL filter parameter
@@ -76,14 +79,19 @@ const Inventory = () => {
     setEditDialogOpen(true);
   };
 
-  const handleRemoveProduct = async (id: number) => {
+  const handleRemoveProduct = async () => {
+    if (!productToDelete) return;
+    
     try {
-      await productsApi.delete(id);
+      await productsApi.delete(productToDelete);
       toast.success("Product removed successfully");
       queryClient.invalidateQueries({ queryKey: ['products'] });
     } catch (error) {
       toast.error("Failed to remove product");
       console.error(error);
+    } finally {
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
     }
   };
 
@@ -253,7 +261,14 @@ const Inventory = () => {
                         <Button variant="outline" size="sm" onClick={() => handleEditClick(item)}>
                           Edit
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleRemoveProduct(item.id)}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setProductToDelete(item.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
                           Remove
                         </Button>
                       </div>
@@ -280,6 +295,23 @@ const Inventory = () => {
           onSuccess={handleEditSuccess}
         />
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveProduct}>
+              Confirm Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
