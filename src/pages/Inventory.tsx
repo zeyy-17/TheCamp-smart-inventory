@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { productsApi, categoriesApi } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const Inventory = () => {
   const [searchParams] = useSearchParams();
@@ -21,7 +22,10 @@ const Inventory = () => {
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
+  
+  const itemsPerPage = 10;
 
   // Handle URL filter parameter
   useEffect(() => {
@@ -61,6 +65,17 @@ const Inventory = () => {
     
     return matchesCategory && matchesSearch && matchesStatus;
   });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery, statusFilter]);
 
   const getStatusColor = (quantity: number, reorderPoint: number) => {
     if (quantity === 0) return "bg-red-100 text-red-700 border-red-300";
@@ -239,7 +254,7 @@ const Inventory = () => {
                   </td>
                 </tr>
               ) : (
-                filteredItems.map((item: any) => (
+                paginatedItems.map((item: any) => (
                   <tr key={item.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="py-4 px-6 text-sm font-medium text-foreground">{item.name}</td>
                     <td className="py-4 px-6 text-sm text-muted-foreground">{item.sku}</td>
@@ -280,6 +295,41 @@ const Inventory = () => {
           </table>
         </div>
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(page)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       {/* Dialogs */}
       <AddProductDialog 
