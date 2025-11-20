@@ -8,6 +8,7 @@ import { Sidebar } from "./components/Sidebar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollToTopButton } from "./components/ScrollToTopButton";
+import { ScrollProgressBar } from "./components/ScrollProgressBar";
 import Dashboard from "./pages/Dashboard";
 import Inventory from "./pages/Inventory";
 import Forecast from "./pages/Forecast";
@@ -62,6 +63,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <ScrollProgressBar />
           <ScrollToTop />
           <ScrollToTopButton />
           <AppRoutes />
