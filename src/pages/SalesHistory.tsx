@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays } from "date-fns";
-import { Search, FileText, RotateCcw } from "lucide-react";
+import { Search, FileText, RotateCcw, Plus } from "lucide-react";
 import { ProcessReturnDialog } from "@/components/ProcessReturnDialog";
+import { RecordSaleDialog } from "@/components/RecordSaleDialog";
+import { BulkSaleDialog } from "@/components/BulkSaleDialog";
 
 export default function SalesHistory() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -18,6 +20,8 @@ export default function SalesHistory() {
   const [startDate, setStartDate] = useState(format(subDays(new Date(), 30), 'yyyy-MM-dd'));
   const [endDate, setEndDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [returnDialogOpen, setReturnDialogOpen] = useState(false);
+  const [saleDialogOpen, setSaleDialogOpen] = useState(false);
+  const [bulkSaleDialogOpen, setBulkSaleDialogOpen] = useState(false);
 
   // Fetch all products for filter
   const { data: products = [] } = useQuery({
@@ -84,10 +88,20 @@ export default function SalesHistory() {
             <h1 className="text-3xl font-bold text-foreground">Sales History</h1>
             <p className="text-muted-foreground mt-1">View and manage all sales transactions</p>
           </div>
-          <Button onClick={() => setReturnDialogOpen(true)} variant="outline">
-            <RotateCcw className="w-4 h-4 mr-2" />
-            Process Return
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setSaleDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Record Sale
+            </Button>
+            <Button onClick={() => setBulkSaleDialogOpen(true)} variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Bulk Record
+            </Button>
+            <Button onClick={() => setReturnDialogOpen(true)} variant="outline">
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Process Return
+            </Button>
+          </div>
         </div>
 
         {/* Summary Cards */}
@@ -275,6 +289,14 @@ export default function SalesHistory() {
         </Card>
       </div>
 
+      <RecordSaleDialog 
+        open={saleDialogOpen} 
+        onOpenChange={setSaleDialogOpen}
+      />
+      <BulkSaleDialog 
+        open={bulkSaleDialogOpen} 
+        onOpenChange={setBulkSaleDialogOpen}
+      />
       <ProcessReturnDialog 
         open={returnDialogOpen} 
         onOpenChange={setReturnDialogOpen}
