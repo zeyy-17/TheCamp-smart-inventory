@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
+import { BulkPurchaseOrderDialog } from '@/components/BulkPurchaseOrderDialog';
 import { Plus, Package } from 'lucide-react';
 import { format } from 'date-fns';
 
 const PurchaseOrders = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -46,10 +48,16 @@ const PurchaseOrders = () => {
             <h1 className="text-3xl font-bold mb-2">Purchase Orders</h1>
             <p className="text-muted-foreground">Track and manage your pre-ordered stocks</p>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Order
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Order
+            </Button>
+            <Button onClick={() => setBulkDialogOpen(true)} variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              Bulk Create
+            </Button>
+          </div>
         </div>
 
         <Card>
@@ -122,6 +130,10 @@ const PurchaseOrders = () => {
         <CreatePurchaseOrderDialog 
           open={dialogOpen} 
           onOpenChange={setDialogOpen}
+        />
+        <BulkPurchaseOrderDialog 
+          open={bulkDialogOpen} 
+          onOpenChange={setBulkDialogOpen}
         />
       </div>
     </main>
