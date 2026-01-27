@@ -1,0 +1,365 @@
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { AddProductDialog } from "@/components/AddProductDialog";
+import { EditProductDialog } from "@/components/EditProductDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import { productsApi, categoriesApi } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+
+interface InventorySectionProps {
+  storeName: string;
+  statusFilter: string | null;
+  onStatusFilterChange: (filter: string | null) => void;
+}
+
+const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: InventorySectionProps) => {
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const queryClient = useQueryClient();
+  
+  const itemsPerPage = 10;
+
+  // Fetch categories
+  const { data: categories = [] } = useQuery<any[]>({
+    queryKey: ['categories'],
+    queryFn: () => categoriesApi.getAll(),
+  });
+
+  // Fetch products
+  const { data: products = [], isLoading, error } = useQuery<any[]>({
+    queryKey: ['products'],
+    queryFn: () => productsApi.getAll(),
+  });
+
+  // Get unique category names
+  const categoryNames = ["All", ...Array.from(new Set(categories.map((c: any) => c.name)))];
+
+  const filteredItems = products.filter((item: any) => {
+    const matchesCategory = selectedCategory === "All" || item.category?.name === selectedCategory;
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         item.sku?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Apply status filter if present
+    let matchesStatus = true;
+    if (statusFilter === 'out-of-stock') {
+      matchesStatus = item.quantity === 0;
+    } else if (statusFilter === 'low-stock') {
+      matchesStatus = item.quantity > 0 && item.quantity <= item.reorder_level;
+    }
+    
+    return matchesCategory && matchesSearch && matchesStatus;
+  });
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedItems = filteredItems.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, searchQuery, statusFilter]);
+
+  const getStatusColor = (quantity: number, reorderPoint: number) => {
+    if (quantity === 0) return "bg-red-100 text-red-700 border-red-300";
+    if (quantity <= reorderPoint) return "bg-yellow-100 text-yellow-700 border-yellow-300";
+    return "bg-green-100 text-green-700 border-green-300";
+  };
+
+  const getStatusText = (quantity: number, reorderPoint: number) => {
+    if (quantity === 0) return "Out of Stock";
+    if (quantity <= reorderPoint) return "Low Stock";
+    return "In Stock";
+  };
+
+  const handleEditClick = (product: any) => {
+    setSelectedProduct(product);
+    setEditDialogOpen(true);
+  };
+
+  const handleRemoveProduct = async () => {
+    if (!productToDelete) return;
+    
+    try {
+      await productsApi.delete(productToDelete);
+      toast.success("Product removed successfully");
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    } catch (error) {
+      toast.error("Failed to remove product");
+      console.error(error);
+    } finally {
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
+    }
+  };
+
+  const handleAddSuccess = () => {
+    setAddDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+  };
+
+  const handleEditSuccess = () => {
+    setEditDialogOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+  };
+
+  if (error) {
+    return (
+      <div className="p-4">
+        <div className="bg-destructive/10 text-destructive p-4 rounded-lg">
+          Error loading inventory data. Please try again later.
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground mb-1">{storeName} Inventory</h2>
+          <p className="text-muted-foreground text-sm">Manage products for {storeName}</p>
+        </div>
+        <Button onClick={() => setAddDialogOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
+          <Plus className="w-4 h-4 mr-2" />
+          Add Product
+        </Button>
+      </div>
+
+      {/* Active Filter Badge */}
+      {statusFilter && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-sm">
+            Filter: {statusFilter === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}
+          </Badge>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => onStatusFilterChange(null)}
+          >
+            Clear Filter
+          </Button>
+        </div>
+      )}
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-card p-4 rounded-xl shadow-custom-md border border-border">
+          <div className="text-sm text-muted-foreground mb-1">Total Products</div>
+          <div className="text-2xl font-bold text-foreground">{products.length}</div>
+        </div>
+        <Button 
+          variant="outline"
+          className="bg-card p-4 rounded-xl shadow-custom-md border border-border hover:bg-warning/10 h-auto flex flex-col items-start transition-all w-full"
+          onClick={() => onStatusFilterChange('low-stock')}
+        >
+          <div className="text-sm text-muted-foreground mb-1">Low Stock Items</div>
+          <div className="text-2xl font-bold text-warning">
+            {products.filter((item: any) => item.quantity > 0 && item.quantity <= item.reorder_level).length}
+          </div>
+        </Button>
+        <Button 
+          variant="outline"
+          className="bg-card p-4 rounded-xl shadow-custom-md border border-border hover:bg-destructive/10 h-auto flex flex-col items-start transition-all w-full"
+          onClick={() => onStatusFilterChange('out-of-stock')}
+        >
+          <div className="text-sm text-muted-foreground mb-1">Out of Stock</div>
+          <div className="text-2xl font-bold text-destructive">
+            {products.filter((item: any) => item.quantity === 0).length}
+          </div>
+        </Button>
+        <div className="bg-card p-4 rounded-xl shadow-custom-md border border-border">
+          <div className="text-sm text-muted-foreground mb-1">Total Value</div>
+          <div className="text-2xl font-bold text-foreground">
+            ₱{products.reduce((sum: number, item: any) => sum + (item.retail_price * item.quantity), 0).toLocaleString()}
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-card p-4 rounded-xl shadow-custom-md border border-border">
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              placeholder="Search by product name or SKU..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+        <div>
+          <div className="text-sm font-medium text-foreground mb-3">Filter by Category</div>
+          <div className="flex flex-wrap gap-2">
+            {categoryNames.map((category) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSelectedCategory(category)}
+                className="transition-all"
+              >
+                {category}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Inventory Table */}
+      <div className="bg-card rounded-xl shadow-custom-md border border-border overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-muted/50 border-b border-border">
+              <tr>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Product Name</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">SKU</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Category</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Quantity</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Reorder Point</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Price</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Status</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    Loading products...
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    No products found
+                  </td>
+                </tr>
+              ) : (
+                paginatedItems.map((item: any) => (
+                  <tr key={item.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                    <td className="py-3 px-4 text-sm font-medium text-foreground">{item.name}</td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{item.sku}</td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{item.category?.name || 'N/A'}</td>
+                    <td className="py-3 px-4 text-sm">
+                      <span className={item.quantity <= item.reorder_level ? "text-red-600 font-semibold" : "text-foreground"}>
+                        {item.quantity}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-muted-foreground">{item.reorder_level}</td>
+                    <td className="py-3 px-4 text-sm text-foreground">₱{item.retail_price?.toLocaleString()}</td>
+                    <td className="py-3 px-4">
+                      <Badge className={getStatusColor(item.quantity, item.reorder_level)} variant="outline">
+                        {getStatusText(item.quantity, item.reorder_level)}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEditClick(item)}>
+                          Edit
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => {
+                            setProductToDelete(item.id);
+                            setDeleteDialogOpen(true);
+                          }}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <PaginationItem key={page}>
+                  <PaginationLink
+                    onClick={() => setCurrentPage(page)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
+
+      {/* Dialogs */}
+      <AddProductDialog 
+        open={addDialogOpen} 
+        onOpenChange={setAddDialogOpen}
+        onSuccess={handleAddSuccess}
+      />
+      {selectedProduct && (
+        <EditProductDialog 
+          open={editDialogOpen} 
+          onOpenChange={setEditDialogOpen}
+          product={selectedProduct}
+          onSuccess={handleEditSuccess}
+        />
+      )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveProduct}>
+              Confirm Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};
+
+export default InventorySection;
