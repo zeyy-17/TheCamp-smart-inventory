@@ -34,7 +34,7 @@ const Inventory = () => {
   };
 
   return (
-    <div className="p-8 space-y-6 animate-fade-in">
+    <div className="p-8 space-y-6 animate-fade-in min-h-screen w-full">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-foreground mb-2">Inventory Management</h1>
