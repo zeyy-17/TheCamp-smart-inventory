@@ -19,18 +19,6 @@ const reportTypes = [
     icon: TrendingUp,
     lastGenerated: "1 day ago",
   },
-  {
-    title: "Prescriptive Insights Summary",
-    description: "AI-generated recommendations and action items based on inventory data",
-    icon: FileText,
-    lastGenerated: "5 hours ago",
-  },
-  {
-    title: "Stock Movement Report",
-    description: "Track product movements, turnover rates, and inventory velocity",
-    icon: FileText,
-    lastGenerated: "3 days ago",
-  },
 ];
 
 const Reports = () => {
