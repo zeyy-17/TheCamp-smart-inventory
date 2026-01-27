@@ -1,9 +1,8 @@
 import { DashboardCard } from "@/components/DashboardCard";
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { TopProductsTable } from "@/components/TopProductsTable";
-import { InsightCard } from "@/components/InsightCard";
 import { InventoryAlerts } from "@/components/InventoryAlerts";
-import { Package, TrendingUp, DollarSign, AlertTriangle, Plus } from "lucide-react";
+import { Package, DollarSign, AlertTriangle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
@@ -129,7 +128,7 @@ const Dashboard = () => {
         <InventoryAlerts />
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <DashboardCard
             title="Total Products"
             value={productsCount?.toString() || "0"}
@@ -152,42 +151,10 @@ const Dashboard = () => {
             trend={salesTrend ? { value: Math.abs(salesTrend), isPositive: salesTrend > 0 } : undefined}
             icon={DollarSign}
           />
-          <DashboardCard
-            title="Stock Value"
-            value="₱0"
-            subtitle="Total inventory"
-            icon={TrendingUp}
-          />
         </div>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <WeeklySalesChart />
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-foreground">Prescriptive Insights</h3>
-            <InsightCard
-              type="opportunity"
-              title="Reorder Opportunity"
-              description="Top-selling products detected with 25% higher velocity. AI recommends increasing order quantities by 30% based on predictive analytics."
-              action="View Details"
-              onAction={handleReorderOpportunity}
-            />
-            <InsightCard
-              type="warning"
-              title="Stock Alert"
-              description="Multiple products below safety stock levels. Immediate reorder recommended to prevent stockouts within 48 hours."
-              action="Reorder Now"
-              onAction={handleStockAlert}
-            />
-            <InsightCard
-              type="revenue"
-              title="Revenue Forecast"
-              description="AI predicts ₱15,000+ weekend sales spike. Advanced forecasting models suggest optimizing inventory for high-demand items."
-              action="View Forecast"
-              onAction={handleViewForecast}
-            />
-          </div>
-        </div>
+        <WeeklySalesChart />
 
         {/* Products Table */}
         <TopProductsTable />
