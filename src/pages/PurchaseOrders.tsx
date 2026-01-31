@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
-import { BulkPurchaseOrderDialog } from '@/components/BulkPurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
-import { Plus, Package, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Package, Pencil, Trash2, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +27,6 @@ const stores = ['All', 'Ampersand', 'hereX', 'Hardin'];
 const PurchaseOrders = () => {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -113,16 +111,10 @@ const PurchaseOrders = () => {
             <h1 className="text-3xl font-bold mb-2">Purchase Orders</h1>
             <p className="text-muted-foreground">Track and manage your pre-ordered stocks</p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Order
-            </Button>
-            <Button onClick={() => setBulkDialogOpen(true)} variant="outline">
-              <Plus className="mr-2 h-4 w-4" />
-              Bulk Create
-            </Button>
-          </div>
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Order
+          </Button>
         </div>
 
         <Card>
@@ -157,7 +149,7 @@ const PurchaseOrders = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Order ID</TableHead>
+                      <TableHead>Invoice #</TableHead>
                       <TableHead>Store</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>SKU</TableHead>
@@ -173,7 +165,12 @@ const PurchaseOrders = () => {
                   <TableBody>
                     {filteredOrders.map((order: any) => (
                       <TableRow key={order.id}>
-                        <TableCell className="font-medium">#{order.id}</TableCell>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-1">
+                            <FileText className="h-3 w-3 text-muted-foreground" />
+                            {order.invoice_number || `#${order.id}`}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge variant={getStoreColor(order.store)}>
                             {order.store || 'N/A'}
@@ -232,10 +229,6 @@ const PurchaseOrders = () => {
         <CreatePurchaseOrderDialog 
           open={dialogOpen} 
           onOpenChange={setDialogOpen}
-        />
-        <BulkPurchaseOrderDialog 
-          open={bulkDialogOpen} 
-          onOpenChange={setBulkDialogOpen}
         />
         <EditPurchaseOrderDialog
           open={editDialogOpen}
