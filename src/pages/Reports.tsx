@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download, FileText, Calendar, TrendingUp, DollarSign, Package, Truck } from "lucide-react";
@@ -6,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { ReportSummaryDialog } from "@/components/ReportSummaryDialog";
 
 const reportTypes = [
   {
@@ -13,16 +15,30 @@ const reportTypes = [
     description: "Comprehensive overview of stock levels, movements, and alerts for the past week",
     icon: Calendar,
     lastGenerated: "2 hours ago",
+    type: "weekly" as const,
   },
   {
     title: "Monthly Sales Analysis",
     description: "Detailed sales performance, trends, and forecast accuracy for the month",
     icon: TrendingUp,
     lastGenerated: "1 day ago",
+    type: "monthly" as const,
   },
 ];
 
 const Reports = () => {
+  const [summaryDialog, setSummaryDialog] = useState<{
+    open: boolean;
+    reportType: "weekly" | "monthly";
+    action: "download" | "regenerate";
+    title: string;
+  }>({
+    open: false,
+    reportType: "weekly",
+    action: "download",
+    title: "",
+  });
+
   // Fetch today's sales
   const { data: todaySales = [] } = useQuery({
     queryKey: ['today-sales'],
@@ -88,12 +104,20 @@ const Reports = () => {
     }
   };
 
-  const handleDownload = (reportName: string) => {
-    toast.success(`Downloading ${reportName}...`);
+  const handleDownload = (reportType: "weekly" | "monthly", title: string) => {
+    setSummaryDialog({ open: true, reportType, action: "download", title });
   };
 
-  const handleGenerate = (reportName: string) => {
-    toast.success(`Generating ${reportName}...`);
+  const handleGenerate = (reportType: "weekly" | "monthly", title: string) => {
+    setSummaryDialog({ open: true, reportType, action: "regenerate", title });
+  };
+
+  const handleConfirmAction = () => {
+    if (summaryDialog.action === "download") {
+      toast.success(`Downloading ${summaryDialog.title}...`);
+    } else {
+      toast.success(`Regenerating ${summaryDialog.title}...`);
+    }
   };
 
   return (
@@ -245,14 +269,14 @@ const Reports = () => {
                         variant="outline"
                         size="sm"
                         className="gap-2"
-                        onClick={() => handleDownload(report.title)}
+                        onClick={() => handleDownload(report.type, report.title)}
                       >
                         <Download className="w-4 h-4" />
                         Download
                       </Button>
                       <Button
                         size="sm"
-                        onClick={() => handleGenerate(report.title)}
+                        onClick={() => handleGenerate(report.type, report.title)}
                       >
                         Regenerate
                       </Button>
@@ -285,6 +309,14 @@ const Reports = () => {
           </div>
         </div>
       </div>
+
+      <ReportSummaryDialog
+        open={summaryDialog.open}
+        onOpenChange={(open) => setSummaryDialog((prev) => ({ ...prev, open }))}
+        reportType={summaryDialog.reportType}
+        action={summaryDialog.action}
+        onConfirm={handleConfirmAction}
+      />
     </div>
   );
 };
