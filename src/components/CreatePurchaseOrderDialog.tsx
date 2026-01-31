@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "./ui/scroll-area";
+import { PurchaseOrderInvoice } from "./PurchaseOrderInvoice";
 
 interface CreatePurchaseOrderDialogProps {
   open: boolean;
@@ -24,6 +25,15 @@ interface OrderItem {
   store: string;
   productId: string;
   quantity: string;
+}
+
+interface InvoiceItem {
+  productName: string;
+  sku: string;
+  store: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
 }
 
 const stores = ['Ampersand', 'hereX', 'Hardin'];
@@ -46,13 +56,22 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
   const [items, setItems] = useState<OrderItem[]>([
     { id: crypto.randomUUID(), store: "", productId: "", quantity: "" }
   ]);
+  
+  // Invoice popup state
+  const [showInvoice, setShowInvoice] = useState(false);
+  const [invoiceData, setInvoiceData] = useState<{
+    invoiceNumber: string;
+    supplierName: string;
+    deliveryDate: Date;
+    items: InvoiceItem[];
+  } | null>(null);
 
   const { data: products } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, sku')
+        .select('id, name, sku, cost_price')
         .order('name');
       if (error) throw error;
       return data;
@@ -135,9 +154,33 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
 
       if (error) throw error;
       
+      // Prepare invoice data
+      const selectedSupplier = suppliers?.find(s => s.id.toString() === supplierId);
+      const invoiceItems: InvoiceItem[] = validItems.map(item => {
+        const product = products?.find(p => p.id.toString() === item.productId);
+        const quantity = parseInt(item.quantity);
+        const unitPrice = product?.cost_price || 0;
+        return {
+          productName: product?.name || 'Unknown',
+          sku: product?.sku || 'N/A',
+          store: item.store,
+          quantity,
+          unitPrice,
+          totalPrice: quantity * unitPrice,
+        };
+      });
+
+      setInvoiceData({
+        invoiceNumber,
+        supplierName: selectedSupplier?.name || 'Unknown',
+        deliveryDate,
+        items: invoiceItems,
+      });
+      
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       toast.success(`Purchase order ${invoiceNumber} created with ${validItems.length} item(s)!`);
       onOpenChange(false);
+      setShowInvoice(true);
       resetForm();
     } catch (error) {
       console.error('Error creating purchase order:', error);
@@ -146,163 +189,176 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
   };
 
   return (
-    <Dialog open={open} onOpenChange={(open) => {
-      if (!open) resetForm();
-      onOpenChange(open);
-    }}>
-      <DialogContent className="sm:max-w-[650px] max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>Create Purchase Order</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+    <>
+      <Dialog open={open} onOpenChange={(open) => {
+        if (!open) resetForm();
+        onOpenChange(open);
+      }}>
+        <DialogContent className="sm:max-w-[650px] max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle>Create Purchase Order</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="invoice">Invoice Number</Label>
+                <Input
+                  id="invoice"
+                  value={invoiceNumber}
+                  onChange={(e) => setInvoiceNumber(e.target.value)}
+                  placeholder="PO-YYYYMMDD-XXXX"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="supplier">Supplier</Label>
+                <Select value={supplierId} onValueChange={setSupplierId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select supplier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {suppliers?.map((supplier) => (
+                      <SelectItem key={supplier.id} value={supplier.id.toString()}>
+                        {supplier.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label htmlFor="invoice">Invoice Number</Label>
+              <Label>Expected Delivery Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !deliveryDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {deliveryDate ? format(deliveryDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={deliveryDate}
+                    onSelect={setDeliveryDate}
+                    disabled={(date) => date < new Date()}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Order Items</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Item
+                </Button>
+              </div>
+              <ScrollArea className="h-[200px] rounded-md border p-3">
+                <div className="space-y-3">
+                  {items.map((item, index) => (
+                    <div key={item.id} className="flex gap-2 items-start">
+                      <div className="flex-1 grid grid-cols-3 gap-2">
+                        <Select
+                          value={item.store}
+                          onValueChange={(value) => updateItem(item.id, 'store', value)}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Store" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {stores.map((store) => (
+                              <SelectItem key={store} value={store}>
+                                {store}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        <Select
+                          value={item.productId}
+                          onValueChange={(value) => updateItem(item.id, 'productId', value)}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue placeholder="Product" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {products?.map((product) => (
+                              <SelectItem key={product.id} value={product.id.toString()}>
+                                {product.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="Qty"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
+                          className="h-9"
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        onClick={() => removeItem(item.id)}
+                        disabled={items.length === 1}
+                      >
+                        <Trash2 className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <p className="text-xs text-muted-foreground">
+                {items.filter(i => i.store && i.productId && i.quantity).length} of {items.length} items configured
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
               <Input
-                id="invoice"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                placeholder="PO-YYYYMMDD-XXXX"
-                required
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Additional notes..."
               />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="supplier">Supplier</Label>
-              <Select value={supplierId} onValueChange={setSupplierId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id.toString()}>
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Expected Delivery Date</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !deliveryDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {deliveryDate ? format(deliveryDate, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={deliveryDate}
-                  onSelect={setDeliveryDate}
-                  disabled={(date) => date < new Date()}
-                  initialFocus
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Order Items</Label>
-              <Button type="button" variant="outline" size="sm" onClick={addItem}>
-                <Plus className="h-4 w-4 mr-1" />
-                Add Item
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
               </Button>
-            </div>
-            <ScrollArea className="h-[200px] rounded-md border p-3">
-              <div className="space-y-3">
-                {items.map((item, index) => (
-                  <div key={item.id} className="flex gap-2 items-start">
-                    <div className="flex-1 grid grid-cols-3 gap-2">
-                      <Select
-                        value={item.store}
-                        onValueChange={(value) => updateItem(item.id, 'store', value)}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Store" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {stores.map((store) => (
-                            <SelectItem key={store} value={store}>
-                              {store}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <Select
-                        value={item.productId}
-                        onValueChange={(value) => updateItem(item.id, 'productId', value)}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder="Product" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products?.map((product) => (
-                            <SelectItem key={product.id} value={product.id.toString()}>
-                              {product.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      
-                      <Input
-                        type="number"
-                        min="1"
-                        placeholder="Qty"
-                        value={item.quantity}
-                        onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                        className="h-9"
-                      />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => removeItem(item.id)}
-                      disabled={items.length === 1}
-                    >
-                      <Trash2 className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-            <p className="text-xs text-muted-foreground">
-              {items.filter(i => i.store && i.productId && i.quantity).length} of {items.length} items configured
-            </p>
-          </div>
+              <Button type="submit">Create Order</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
-            <Input
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Additional notes..."
-            />
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Create Order</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      {invoiceData && (
+        <PurchaseOrderInvoice
+          open={showInvoice}
+          onOpenChange={setShowInvoice}
+          invoiceNumber={invoiceData.invoiceNumber}
+          supplierName={invoiceData.supplierName}
+          deliveryDate={invoiceData.deliveryDate}
+          items={invoiceData.items}
+        />
+      )}
+    </>
   );
 };
