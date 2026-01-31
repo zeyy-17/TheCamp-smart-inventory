@@ -6,7 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Package } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -14,17 +14,23 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "./ui/scroll-area";
 import { PurchaseOrderInvoice } from "./PurchaseOrderInvoice";
+import { Separator } from "./ui/separator";
 
 interface CreatePurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-interface OrderItem {
+interface ProductEntry {
   id: string;
-  store: string;
   productId: string;
   quantity: string;
+}
+
+interface StoreItem {
+  id: string;
+  store: string;
+  products: ProductEntry[];
 }
 
 interface InvoiceItem {
@@ -47,15 +53,25 @@ const generateInvoiceNumber = () => {
   return `PO-${year}${month}${day}-${random}`;
 };
 
+const createEmptyProductEntry = (): ProductEntry => ({
+  id: crypto.randomUUID(),
+  productId: "",
+  quantity: "",
+});
+
+const createEmptyStoreItem = (): StoreItem => ({
+  id: crypto.randomUUID(),
+  store: "",
+  products: [createEmptyProductEntry()],
+});
+
 export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchaseOrderDialogProps) => {
   const queryClient = useQueryClient();
   const [invoiceNumber, setInvoiceNumber] = useState(generateInvoiceNumber());
   const [supplierId, setSupplierId] = useState("");
   const [deliveryDate, setDeliveryDate] = useState<Date>();
   const [notes, setNotes] = useState("");
-  const [items, setItems] = useState<OrderItem[]>([
-    { id: crypto.randomUUID(), store: "", productId: "", quantity: "" }
-  ]);
+  const [storeItems, setStoreItems] = useState<StoreItem[]>([createEmptyStoreItem()]);
   
   // Invoice popup state
   const [showInvoice, setShowInvoice] = useState(false);
@@ -90,19 +106,54 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
     }
   });
 
-  const addItem = () => {
-    setItems([...items, { id: crypto.randomUUID(), store: "", productId: "", quantity: "" }]);
+  const addStoreItem = () => {
+    setStoreItems([...storeItems, createEmptyStoreItem()]);
   };
 
-  const removeItem = (id: string) => {
-    if (items.length > 1) {
-      setItems(items.filter(item => item.id !== id));
+  const removeStoreItem = (storeItemId: string) => {
+    if (storeItems.length > 1) {
+      setStoreItems(storeItems.filter(item => item.id !== storeItemId));
     }
   };
 
-  const updateItem = (id: string, field: keyof OrderItem, value: string) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
+  const updateStoreItemStore = (storeItemId: string, store: string) => {
+    setStoreItems(storeItems.map(item =>
+      item.id === storeItemId ? { ...item, store } : item
+    ));
+  };
+
+  const addProductToStore = (storeItemId: string) => {
+    setStoreItems(storeItems.map(item =>
+      item.id === storeItemId
+        ? { ...item, products: [...item.products, createEmptyProductEntry()] }
+        : item
+    ));
+  };
+
+  const removeProductFromStore = (storeItemId: string, productEntryId: string) => {
+    setStoreItems(storeItems.map(item => {
+      if (item.id === storeItemId && item.products.length > 1) {
+        return { ...item, products: item.products.filter(p => p.id !== productEntryId) };
+      }
+      return item;
+    }));
+  };
+
+  const updateProductEntry = (
+    storeItemId: string,
+    productEntryId: string,
+    field: keyof ProductEntry,
+    value: string
+  ) => {
+    setStoreItems(storeItems.map(item =>
+      item.id === storeItemId
+        ? {
+            ...item,
+            products: item.products.map(p =>
+              p.id === productEntryId ? { ...p, [field]: value } : p
+            ),
+          }
+        : item
     ));
   };
 
@@ -111,7 +162,33 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
     setSupplierId("");
     setDeliveryDate(undefined);
     setNotes("");
-    setItems([{ id: crypto.randomUUID(), store: "", productId: "", quantity: "" }]);
+    setStoreItems([createEmptyStoreItem()]);
+  };
+
+  const getValidOrderItems = () => {
+    const items: { store: string; productId: string; quantity: number }[] = [];
+    
+    storeItems.forEach(storeItem => {
+      if (!storeItem.store) return;
+      
+      storeItem.products.forEach(product => {
+        if (product.productId && product.quantity && parseInt(product.quantity) > 0) {
+          items.push({
+            store: storeItem.store,
+            productId: product.productId,
+            quantity: parseInt(product.quantity),
+          });
+        }
+      });
+    });
+    
+    return items;
+  };
+
+  const getTotalItemCount = () => {
+    return storeItems.reduce((total, storeItem) => {
+      return total + storeItem.products.filter(p => p.productId && p.quantity).length;
+    }, 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,9 +204,7 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
       return;
     }
 
-    const validItems = items.filter(item => 
-      item.store && item.productId && item.quantity && parseInt(item.quantity) > 0
-    );
+    const validItems = getValidOrderItems();
 
     if (validItems.length === 0) {
       toast.error("Please add at least one valid item with store, product, and quantity");
@@ -141,7 +216,7 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         invoice_number: invoiceNumber,
         product_id: parseInt(item.productId),
         supplier_id: parseInt(supplierId),
-        quantity: parseInt(item.quantity),
+        quantity: item.quantity,
         expected_delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
         status: 'pending',
         store: item.store,
@@ -158,15 +233,14 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
       const selectedSupplier = suppliers?.find(s => s.id.toString() === supplierId);
       const invoiceItems: InvoiceItem[] = validItems.map(item => {
         const product = products?.find(p => p.id.toString() === item.productId);
-        const quantity = parseInt(item.quantity);
         const unitPrice = product?.cost_price || 0;
         return {
           productName: product?.name || 'Unknown',
           sku: product?.sku || 'N/A',
           store: item.store,
-          quantity,
+          quantity: item.quantity,
           unitPrice,
-          totalPrice: quantity * unitPrice,
+          totalPrice: item.quantity * unitPrice,
         };
       });
 
@@ -194,7 +268,7 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         if (!open) resetForm();
         onOpenChange(open);
       }}>
-        <DialogContent className="sm:max-w-[650px] max-h-[90vh]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Create Purchase Order</DialogTitle>
           </DialogHeader>
@@ -258,23 +332,25 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Order Items</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                <Label>Order Items by Store</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addStoreItem}>
                   <Plus className="h-4 w-4 mr-1" />
-                  Add Item
+                  Add Store
                 </Button>
               </div>
-              <ScrollArea className="h-[200px] rounded-md border p-3">
-                <div className="space-y-3">
-                  {items.map((item, index) => (
-                    <div key={item.id} className="flex gap-2 items-start">
-                      <div className="flex-1 grid grid-cols-3 gap-2">
+              <ScrollArea className="h-[280px] rounded-md border p-3">
+                <div className="space-y-4">
+                  {storeItems.map((storeItem, storeIndex) => (
+                    <div key={storeItem.id} className="space-y-2">
+                      {storeIndex > 0 && <Separator className="my-3" />}
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-muted-foreground" />
                         <Select
-                          value={item.store}
-                          onValueChange={(value) => updateItem(item.id, 'store', value)}
+                          value={storeItem.store}
+                          onValueChange={(value) => updateStoreItemStore(storeItem.id, value)}
                         >
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Store" />
+                          <SelectTrigger className="w-[140px] h-9">
+                            <SelectValue placeholder="Select store" />
                           </SelectTrigger>
                           <SelectContent>
                             {stores.map((store) => (
@@ -284,48 +360,78 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
                             ))}
                           </SelectContent>
                         </Select>
-                        
-                        <Select
-                          value={item.productId}
-                          onValueChange={(value) => updateItem(item.id, 'productId', value)}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => addProductToStore(storeItem.id)}
+                          className="ml-auto"
                         >
-                          <SelectTrigger className="h-9">
-                            <SelectValue placeholder="Product" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {products?.map((product) => (
-                              <SelectItem key={product.id} value={product.id.toString()}>
-                                {product.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        
-                        <Input
-                          type="number"
-                          min="1"
-                          placeholder="Qty"
-                          value={item.quantity}
-                          onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
-                          className="h-9"
-                        />
+                          <Plus className="h-3 w-3 mr-1" />
+                          Add Product
+                        </Button>
+                        {storeItems.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => removeStoreItem(storeItem.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => removeItem(item.id)}
-                        disabled={items.length === 1}
-                      >
-                        <Trash2 className="h-4 w-4 text-muted-foreground" />
-                      </Button>
+                      
+                      <div className="ml-6 space-y-2">
+                        {storeItem.products.map((product) => (
+                          <div key={product.id} className="flex gap-2 items-center">
+                            <Select
+                              value={product.productId}
+                              onValueChange={(value) =>
+                                updateProductEntry(storeItem.id, product.id, 'productId', value)
+                              }
+                            >
+                              <SelectTrigger className="flex-1 h-9">
+                                <SelectValue placeholder="Select product" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {products?.map((p) => (
+                                  <SelectItem key={p.id} value={p.id.toString()}>
+                                    {p.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              type="number"
+                              min="1"
+                              placeholder="Qty"
+                              value={product.quantity}
+                              onChange={(e) =>
+                                updateProductEntry(storeItem.id, product.id, 'quantity', e.target.value)
+                              }
+                              className="w-20 h-9"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9"
+                              onClick={() => removeProductFromStore(storeItem.id, product.id)}
+                              disabled={storeItem.products.length === 1}
+                            >
+                              <Trash2 className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
               </ScrollArea>
               <p className="text-xs text-muted-foreground">
-                {items.filter(i => i.store && i.productId && i.quantity).length} of {items.length} items configured
+                {getTotalItemCount()} product(s) configured across {storeItems.filter(s => s.store).length} store(s)
               </p>
             </div>
 
