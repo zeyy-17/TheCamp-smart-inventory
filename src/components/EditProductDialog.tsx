@@ -60,23 +60,41 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
     setIsSubmitting(true);
 
     try {
-      await productsApi.update(product.id, {
-        name: formData.name,
-        sku: formData.sku,
-        category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
-        supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : undefined,
-        cost_price: parseFloat(formData.cost_price),
-        retail_price: parseFloat(formData.retail_price),
-        quantity: parseInt(formData.quantity),
-        reorder_level: parseInt(formData.reorder_level),
-      });
+      const updateData: Record<string, any> = {
+        name: formData.name.trim(),
+        sku: formData.sku.trim(),
+        cost_price: parseFloat(formData.cost_price) || 0,
+        retail_price: parseFloat(formData.retail_price) || 0,
+        quantity: parseInt(formData.quantity) || 0,
+        reorder_level: parseInt(formData.reorder_level) || 0,
+      };
 
-      toast.success("Product updated successfully");
-      if (onSuccess) onSuccess();
+      // Only include category_id and supplier_id if they have values
+      if (formData.category_id) {
+        updateData.category_id = parseInt(formData.category_id);
+      }
+      if (formData.supplier_id) {
+        updateData.supplier_id = parseInt(formData.supplier_id);
+      }
+
+      const updatedProduct = await productsApi.update(product.id, updateData);
+      
+      // Determine the new status based on quantity and reorder level
+      const quantity = updateData.quantity;
+      const reorderLevel = updateData.reorder_level;
+      let statusMessage = "In Stock";
+      if (quantity === 0) {
+        statusMessage = "Out of Stock";
+      } else if (quantity <= reorderLevel) {
+        statusMessage = "Low Stock";
+      }
+
+      toast.success(`Product updated successfully - Status: ${statusMessage}`);
       onOpenChange(false);
+      if (onSuccess) onSuccess();
     } catch (error: any) {
+      console.error("Update error:", error);
       toast.error(error.message || "Failed to update product");
-      console.error(error);
     } finally {
       setIsSubmitting(false);
     }
