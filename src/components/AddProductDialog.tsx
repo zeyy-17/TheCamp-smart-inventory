@@ -10,6 +10,12 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 
+const stores = [
+  { id: "ampersand", name: "Ampersand" },
+  { id: "herex", name: "hereX" },
+  { id: "hardin", name: "Hardin" },
+];
+
 interface ProductFormData {
   id: string;
   name: string;
@@ -20,6 +26,7 @@ interface ProductFormData {
   retail_price: string;
   quantity: string;
   reorder_level: string;
+  store: string;
 }
 
 const createEmptyProduct = (): ProductFormData => ({
@@ -32,6 +39,7 @@ const createEmptyProduct = (): ProductFormData => ({
   retail_price: "",
   quantity: "0",
   reorder_level: "20",
+  store: "",
 });
 
 interface AddProductDialogProps {
@@ -202,7 +210,26 @@ export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDi
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-4 gap-3">
+                  <div className="grid grid-cols-5 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor={`store-${product.id}`} className="text-xs">Store*</Label>
+                      <Select
+                        value={product.store}
+                        onValueChange={(value) => updateProduct(product.id, 'store', value)}
+                      >
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stores.map((store) => (
+                            <SelectItem key={store.id} value={store.id}>
+                              {store.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
                     <div className="space-y-1">
                       <Label htmlFor={`category-${product.id}`} className="text-xs">Category</Label>
                       <Select
