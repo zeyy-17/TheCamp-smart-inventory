@@ -2,21 +2,17 @@ import { DashboardCard } from "@/components/DashboardCard";
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { TopProductsTable } from "@/components/TopProductsTable";
 import { InventoryAlerts } from "@/components/InventoryAlerts";
-import { Package, DollarSign, AlertTriangle, Plus } from "lucide-react";
-import { toast } from "sonner";
+import { Package, DollarSign, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
-import { RecordSaleDialog } from "@/components/RecordSaleDialog";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { subDays, format } from "date-fns";
-import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
-  const [saleDialogOpen, setSaleDialogOpen] = useState(false);
 
   // Fetch total products count
   const { data: productsCount } = useQuery({
@@ -99,17 +95,11 @@ const Dashboard = () => {
     <div className="flex-1 bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
-            <p className="text-muted-foreground mt-1">
-              Real-time insights for smarter inventory decisions
-            </p>
-          </div>
-          <Button onClick={() => setSaleDialogOpen(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Record Sale
-          </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
+          <p className="text-muted-foreground mt-1">
+            Real-time insights for smarter inventory decisions
+          </p>
         </div>
 
         {/* Inventory Alerts */}
@@ -151,11 +141,6 @@ const Dashboard = () => {
       <CreatePurchaseOrderDialog 
         open={reorderDialogOpen} 
         onOpenChange={setReorderDialogOpen} 
-      />
-      
-      <RecordSaleDialog 
-        open={saleDialogOpen} 
-        onOpenChange={setSaleDialogOpen}
       />
     </div>
   );
