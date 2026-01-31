@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
-import { Plus, Package, Pencil, Trash2, FileText } from 'lucide-react';
+import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
+import { Plus, Package, Pencil, Trash2, FileText, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -31,6 +32,8 @@ const PurchaseOrders = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [activeStore, setActiveStore] = useState('All');
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -39,7 +42,7 @@ const PurchaseOrders = () => {
         .from('purchase_orders')
         .select(`
           *,
-          products(name, sku),
+          products(name, sku, cost_price),
           suppliers(name, contact_email, contact_phone)
         `)
         .order('created_at', { ascending: false });
@@ -61,6 +64,36 @@ const PurchaseOrders = () => {
   const handleDeleteClick = (order: any) => {
     setSelectedOrder(order);
     setDeleteDialogOpen(true);
+  };
+
+  const handleViewInvoice = (invoiceNumber: string) => {
+    setSelectedInvoice(invoiceNumber);
+    setInvoiceDialogOpen(true);
+  };
+
+  // Get invoice items for the selected invoice
+  const getInvoiceItems = () => {
+    if (!selectedInvoice || !orders) return [];
+    const invoiceOrders = orders.filter(o => o.invoice_number === selectedInvoice);
+    return invoiceOrders.map(order => ({
+      productName: order.products?.name || 'Unknown',
+      sku: order.products?.sku || 'N/A',
+      store: order.store || 'N/A',
+      quantity: order.quantity,
+      unitPrice: order.products?.cost_price || 0,
+      totalPrice: order.quantity * (order.products?.cost_price || 0),
+    }));
+  };
+
+  const getInvoiceData = () => {
+    if (!selectedInvoice || !orders) return null;
+    const invoiceOrders = orders.filter(o => o.invoice_number === selectedInvoice);
+    if (invoiceOrders.length === 0) return null;
+    const firstOrder = invoiceOrders[0];
+    return {
+      supplierName: firstOrder.suppliers?.name || 'Unknown',
+      deliveryDate: new Date(firstOrder.expected_delivery_date),
+    };
   };
 
   const handleDelete = async () => {
@@ -166,10 +199,15 @@ const PurchaseOrders = () => {
                     {filteredOrders.map((order: any) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">
-                          <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
+                            onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
+                          >
                             <FileText className="h-3 w-3 text-muted-foreground" />
                             {order.invoice_number || `#${order.id}`}
-                          </div>
+                          </Button>
                         </TableCell>
                         <TableCell>
                           <Badge variant={getStoreColor(order.store)}>
@@ -200,11 +238,20 @@ const PurchaseOrders = () => {
                           {order.notes || '-'}
                         </TableCell>
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
+                              title="View Invoice"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => handleEdit(order)}
+                              title="Edit"
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
@@ -212,6 +259,7 @@ const PurchaseOrders = () => {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteClick(order)}
+                              title="Delete"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -252,6 +300,17 @@ const PurchaseOrders = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {selectedInvoice && getInvoiceData() && (
+          <PurchaseOrderInvoice
+            open={invoiceDialogOpen}
+            onOpenChange={setInvoiceDialogOpen}
+            invoiceNumber={selectedInvoice}
+            supplierName={getInvoiceData()!.supplierName}
+            deliveryDate={getInvoiceData()!.deliveryDate}
+            items={getInvoiceItems()}
+          />
+        )}
       </div>
     </main>
   );
