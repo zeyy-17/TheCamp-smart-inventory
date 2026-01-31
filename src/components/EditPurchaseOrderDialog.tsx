@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -12,24 +12,50 @@ import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Textarea } from "./ui/textarea";
 
-interface CreatePurchaseOrderDialogProps {
+interface EditPurchaseOrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  order: {
+    id: number;
+    product_id: number | null;
+    supplier_id: number | null;
+    quantity: number;
+    expected_delivery_date: string;
+    status: string | null;
+    notes: string | null;
+    store: string | null;
+  } | null;
 }
 
 const stores = ['Ampersand', 'hereX', 'Hardin'];
 
-export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchaseOrderDialogProps) => {
+export const EditPurchaseOrderDialog = ({ open, onOpenChange, order }: EditPurchaseOrderDialogProps) => {
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({
     productId: "",
     quantity: "",
     supplierId: "",
+    status: "",
+    notes: "",
     store: "",
   });
   const [deliveryDate, setDeliveryDate] = useState<Date>();
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (order) {
+      setFormData({
+        productId: order.product_id?.toString() || "",
+        quantity: order.quantity.toString(),
+        supplierId: order.supplier_id?.toString() || "",
+        status: order.status || "pending",
+        notes: order.notes || "",
+        store: order.store || "Ampersand",
+      });
+      setDeliveryDate(new Date(order.expected_delivery_date));
+    }
+  }, [order]);
 
   const { data: products } = useQuery({
     queryKey: ['products'],
@@ -57,13 +83,13 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
     
+    if (!order) return;
+
     try {
       const quantity = parseInt(formData.quantity);
       
       if (!deliveryDate) {
-        setErrors({ deliveryDate: "Delivery date is required" });
         toast.error("Please select a delivery date");
         return;
       }
@@ -72,33 +98,28 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         toast.error("Please select product and supplier");
         return;
       }
-
-      if (!formData.store) {
-        toast.error("Please select a store");
-        return;
-      }
       
       const { error } = await supabase
         .from('purchase_orders')
-        .insert({
+        .update({
           product_id: parseInt(formData.productId),
           supplier_id: parseInt(formData.supplierId),
           quantity,
           expected_delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
-          status: 'pending',
+          status: formData.status,
+          notes: formData.notes || null,
           store: formData.store,
-        });
+        })
+        .eq('id', order.id);
 
       if (error) throw error;
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      toast.success("Purchase order created successfully!");
+      toast.success("Purchase order updated successfully!");
       onOpenChange(false);
-      setFormData({ productId: "", quantity: "", supplierId: "", store: "" });
-      setDeliveryDate(undefined);
     } catch (error) {
-      console.error('Error creating purchase order:', error);
-      toast.error("Failed to create purchase order");
+      console.error('Error updating purchase order:', error);
+      toast.error("Failed to update purchase order");
     }
   };
 
@@ -106,7 +127,7 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Create Purchase Order</DialogTitle>
+          <DialogTitle>Edit Purchase Order #{order?.id}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -126,7 +147,6 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
                 ))}
               </SelectContent>
             </Select>
-            {errors.store && <p className="text-sm text-destructive">{errors.store}</p>}
           </div>
 
           <div className="space-y-2">
@@ -146,7 +166,6 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
                 ))}
               </SelectContent>
             </Select>
-            {errors.productId && <p className="text-sm text-destructive">{errors.productId}</p>}
           </div>
           
           <div className="space-y-2">
@@ -160,7 +179,6 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
               onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
               required
             />
-            {errors.quantity && <p className="text-sm text-destructive">{errors.quantity}</p>}
           </div>
           
           <div className="space-y-2">
@@ -180,7 +198,6 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
                 ))}
               </SelectContent>
             </Select>
-            {errors.supplierId && <p className="text-sm text-destructive">{errors.supplierId}</p>}
           </div>
           
           <div className="space-y-2">
@@ -203,20 +220,46 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
                   mode="single"
                   selected={deliveryDate}
                   onSelect={setDeliveryDate}
-                  disabled={(date) => date < new Date()}
                   initialFocus
                   className={cn("p-3 pointer-events-auto")}
                 />
               </PopoverContent>
             </Popover>
-            {errors.deliveryDate && <p className="text-sm text-destructive">{errors.deliveryDate}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value) => setFormData({ ...formData, status: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="received">Received</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+              placeholder="Optional notes..."
+              rows={2}
+            />
           </div>
           
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Submit Order</Button>
+            <Button type="submit">Update Order</Button>
           </DialogFooter>
         </form>
       </DialogContent>
