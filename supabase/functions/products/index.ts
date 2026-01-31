@@ -41,7 +41,11 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/').filter(Boolean);
-    const productId = pathParts[pathParts.length - 1];
+    // Path is like /products/123 or just /products
+    // After filter(Boolean), pathParts would be ['products', '123'] or ['products']
+    const lastPart = pathParts[pathParts.length - 1];
+    // Check if the last part is a numeric ID (not 'products')
+    const productId = lastPart && !isNaN(Number(lastPart)) ? lastPart : null;
 
     // POST /products - Create product
     if (req.method === 'POST') {
@@ -66,7 +70,7 @@ Deno.serve(async (req) => {
     }
 
     // GET /products/:id - Get single product by ID
-    if (req.method === 'GET' && productId && productId !== 'products') {
+    if (req.method === 'GET' && productId) {
       const { data, error } = await supabase
         .from('products')
         .select(`
