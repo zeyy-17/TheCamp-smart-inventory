@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
 import { RecordSaleDialog } from "@/components/RecordSaleDialog";
-import { ProcessReturnDialog } from "@/components/ProcessReturnDialog";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +17,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
-  const [returnDialogOpen, setReturnDialogOpen] = useState(false);
 
   // Fetch total products count
   const { data: productsCount } = useQuery({
@@ -108,20 +106,10 @@ const Dashboard = () => {
               Real-time insights for smarter inventory decisions
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button onClick={() => setSaleDialogOpen(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Record Sale
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setReturnDialogOpen(true)}
-              className="gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Process Return
-            </Button>
-          </div>
+          <Button onClick={() => setSaleDialogOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Record Sale
+          </Button>
         </div>
 
         {/* Inventory Alerts */}
@@ -168,10 +156,6 @@ const Dashboard = () => {
       <RecordSaleDialog 
         open={saleDialogOpen} 
         onOpenChange={setSaleDialogOpen}
-      />
-      <ProcessReturnDialog 
-        open={returnDialogOpen} 
-        onOpenChange={setReturnDialogOpen}
       />
     </div>
   );

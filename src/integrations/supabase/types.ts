@@ -230,6 +230,7 @@ export type Database = {
           id: number
           product_id: number | null
           quantity: number
+          store: string | null
           total_amount: number
         }
         Insert: {
@@ -238,6 +239,7 @@ export type Database = {
           id?: number
           product_id?: number | null
           quantity: number
+          store?: string | null
           total_amount: number
         }
         Update: {
@@ -246,6 +248,7 @@ export type Database = {
           id?: number
           product_id?: number | null
           quantity?: number
+          store?: string | null
           total_amount?: number
         }
         Relationships: [
