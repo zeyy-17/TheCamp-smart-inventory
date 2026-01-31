@@ -1,10 +1,13 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { Download, RefreshCw, Calendar, TrendingUp, Package, DollarSign, FileText } from "lucide-react";
-import { format, subDays, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
+import { Download, RefreshCw, Calendar, TrendingUp, Package, DollarSign, FileText, Truck } from "lucide-react";
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from "date-fns";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "./ui/skeleton";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface ReportSummaryDialogProps {
   open: boolean;
@@ -21,6 +24,7 @@ export const ReportSummaryDialog = ({
   action,
   onConfirm,
 }: ReportSummaryDialogProps) => {
+  const queryClient = useQueryClient();
   const today = new Date();
   
   // Calculate date range based on report type
@@ -28,13 +32,13 @@ export const ReportSummaryDialog = ({
     ? { start: startOfWeek(today), end: endOfWeek(today) }
     : { start: startOfMonth(today), end: endOfMonth(today) };
 
+  const startDate = format(dateRange.start, 'yyyy-MM-dd');
+  const endDate = format(dateRange.end, 'yyyy-MM-dd');
+
   // Fetch sales data for the period
-  const { data: salesData, isLoading: salesLoading } = useQuery({
+  const { data: salesData, isLoading: salesLoading, refetch: refetchSales } = useQuery({
     queryKey: ['report-sales', reportType, open],
     queryFn: async () => {
-      const startDate = format(dateRange.start, 'yyyy-MM-dd');
-      const endDate = format(dateRange.end, 'yyyy-MM-dd');
-      
       const { data } = await supabase
         .from('sales')
         .select('*, products(name, category_id)')
@@ -47,12 +51,9 @@ export const ReportSummaryDialog = ({
   });
 
   // Fetch inventory movements for the period
-  const { data: movementsData, isLoading: movementsLoading } = useQuery({
+  const { data: movementsData, isLoading: movementsLoading, refetch: refetchMovements } = useQuery({
     queryKey: ['report-movements', reportType, open],
     queryFn: async () => {
-      const startDate = format(dateRange.start, 'yyyy-MM-dd');
-      const endDate = format(dateRange.end, 'yyyy-MM-dd');
-      
       const { data } = await supabase
         .from('movements')
         .select('*, products(name)')
@@ -65,7 +66,7 @@ export const ReportSummaryDialog = ({
   });
 
   // Fetch products for stock levels
-  const { data: productsData, isLoading: productsLoading } = useQuery({
+  const { data: productsData, isLoading: productsLoading, refetch: refetchProducts } = useQuery({
     queryKey: ['report-products', open],
     queryFn: async () => {
       const { data } = await supabase
@@ -77,7 +78,22 @@ export const ReportSummaryDialog = ({
     enabled: open,
   });
 
-  const isLoading = salesLoading || movementsLoading || productsLoading;
+  // Fetch purchase orders for the period
+  const { data: purchaseOrdersData, isLoading: poLoading, refetch: refetchPO } = useQuery({
+    queryKey: ['report-purchase-orders', reportType, open],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('purchase_orders')
+        .select('*, products(name), suppliers(name)')
+        .gte('created_at', startDate)
+        .lte('created_at', endDate);
+      
+      return data || [];
+    },
+    enabled: open,
+  });
+
+  const isLoading = salesLoading || movementsLoading || productsLoading || poLoading;
 
   // Calculate summary stats
   const totalSales = salesData?.reduce((sum, sale) => sum + Number(sale.total_amount), 0) || 0;
@@ -86,6 +102,12 @@ export const ReportSummaryDialog = ({
   const totalMovements = movementsData?.length || 0;
   const lowStockItems = productsData?.filter(p => (p.quantity || 0) <= (p.reorder_level || 0)).length || 0;
   const totalProducts = productsData?.length || 0;
+
+  // Purchase order stats
+  const totalPurchaseOrders = purchaseOrdersData?.length || 0;
+  const pendingOrders = purchaseOrdersData?.filter(po => po.status === 'pending').length || 0;
+  const receivedOrders = purchaseOrdersData?.filter(po => po.status === 'received').length || 0;
+  const totalOrderedQty = purchaseOrdersData?.reduce((sum, po) => sum + po.quantity, 0) || 0;
 
   // Top selling products
   const productSales: Record<string, { name: string; qty: number; amount: number }> = {};
@@ -101,7 +123,157 @@ export const ReportSummaryDialog = ({
     .sort((a, b) => b.amount - a.amount)
     .slice(0, 5);
 
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    const title = reportType === "weekly" ? "Weekly Inventory Report" : "Monthly Sales Analysis";
+    const periodText = reportType === "weekly" 
+      ? `${format(dateRange.start, 'MMM d')} - ${format(dateRange.end, 'MMM d, yyyy')}`
+      : format(dateRange.start, 'MMMM yyyy');
+
+    // Header
+    doc.setFontSize(20);
+    doc.setTextColor(41, 128, 185);
+    doc.text("The Camp Inventory", 14, 20);
+    
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text(title, 14, 32);
+    
+    doc.setFontSize(11);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Report Period: ${periodText}`, 14, 40);
+    doc.text(`Generated: ${format(new Date(), 'MMM d, yyyy h:mm a')}`, 14, 47);
+
+    let yPos = 60;
+
+    // Summary Section
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text("Summary", 14, yPos);
+    yPos += 8;
+
+    autoTable(doc, {
+      startY: yPos,
+      head: [['Metric', 'Value']],
+      body: [
+        ['Total Sales', `₱${totalSales.toLocaleString()}`],
+        ['Transactions', totalTransactions.toString()],
+        ['Items Sold', totalItemsSold.toString()],
+        ['Stock Movements', totalMovements.toString()],
+        ['Low Stock Items', `${lowStockItems} of ${totalProducts}`],
+        ['Purchase Orders', totalPurchaseOrders.toString()],
+        ['Pending Orders', pendingOrders.toString()],
+        ['Received Orders', receivedOrders.toString()],
+        ['Total Ordered Qty', totalOrderedQty.toString()],
+      ],
+      theme: 'striped',
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+
+    yPos = (doc as any).lastAutoTable.finalY + 15;
+
+    // Top Selling Products
+    if (topProducts.length > 0) {
+      doc.setFontSize(14);
+      doc.text("Top Selling Products", 14, yPos);
+      yPos += 8;
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Rank', 'Product', 'Quantity Sold', 'Revenue']],
+        body: topProducts.map((product, idx) => [
+          (idx + 1).toString(),
+          product.name,
+          product.qty.toString(),
+          `₱${product.amount.toLocaleString()}`,
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185] },
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Purchase Orders Table
+    if (purchaseOrdersData && purchaseOrdersData.length > 0) {
+      // Check if we need a new page
+      if (yPos > 240) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.text("Purchase Orders", 14, yPos);
+      yPos += 8;
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Invoice #', 'Product', 'Supplier', 'Qty', 'Status', 'Expected Delivery']],
+        body: purchaseOrdersData.map(po => [
+          po.invoice_number || `PO-${po.id}`,
+          po.products?.name || 'N/A',
+          po.suppliers?.name || 'N/A',
+          po.quantity.toString(),
+          po.status || 'pending',
+          format(new Date(po.expected_delivery_date), 'MMM d, yyyy'),
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [41, 128, 185] },
+        columnStyles: {
+          0: { cellWidth: 30 },
+          4: { cellWidth: 22 },
+        },
+      });
+
+      yPos = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Low Stock Items
+    const lowStockProducts = productsData?.filter(p => (p.quantity || 0) <= (p.reorder_level || 0)) || [];
+    if (lowStockProducts.length > 0) {
+      if (yPos > 240) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.text("Low Stock Alerts", 14, yPos);
+      yPos += 8;
+
+      autoTable(doc, {
+        startY: yPos,
+        head: [['Product', 'SKU', 'Current Stock', 'Reorder Level']],
+        body: lowStockProducts.map(p => [
+          p.name,
+          p.sku,
+          (p.quantity || 0).toString(),
+          (p.reorder_level || 0).toString(),
+        ]),
+        theme: 'striped',
+        headStyles: { fillColor: [231, 76, 60] },
+      });
+    }
+
+    // Save the PDF
+    const fileName = `${reportType}-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+    doc.save(fileName);
+    toast.success(`${title} downloaded successfully!`);
+  };
+
   const handleConfirm = () => {
+    if (action === "download") {
+      generatePDF();
+    } else {
+      // Regenerate - refetch all data
+      Promise.all([refetchSales(), refetchMovements(), refetchProducts(), refetchPO()])
+        .then(() => {
+          queryClient.invalidateQueries({ queryKey: ['report-sales'] });
+          queryClient.invalidateQueries({ queryKey: ['report-movements'] });
+          queryClient.invalidateQueries({ queryKey: ['report-products'] });
+          queryClient.invalidateQueries({ queryKey: ['report-purchase-orders'] });
+          toast.success("Report regenerated with latest data!");
+        });
+    }
     onConfirm();
     onOpenChange(false);
   };
@@ -192,6 +364,31 @@ export const ReportSummaryDialog = ({
                 </div>
               </div>
 
+              {/* Purchase Orders Stats */}
+              <div className="border rounded-lg p-4 bg-blue-500/5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Truck className="w-4 h-4 text-blue-600" />
+                  <h4 className="font-semibold text-foreground">Purchase Orders</h4>
+                </div>
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <div className="text-xl font-bold text-foreground">{totalPurchaseOrders}</div>
+                    <div className="text-xs text-muted-foreground">Total Orders</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-warning">{pendingOrders}</div>
+                    <div className="text-xs text-muted-foreground">Pending</div>
+                  </div>
+                  <div>
+                    <div className="text-xl font-bold text-green-600">{receivedOrders}</div>
+                    <div className="text-xs text-muted-foreground">Received</div>
+                  </div>
+                </div>
+                <div className="mt-2 text-center text-sm text-muted-foreground">
+                  {totalOrderedQty} total units ordered
+                </div>
+              </div>
+
               {/* Top Products */}
               {topProducts.length > 0 && (
                 <div className="border rounded-lg p-4">
@@ -225,13 +422,15 @@ export const ReportSummaryDialog = ({
                       <li>• Stock level changes</li>
                       <li>• Low stock alerts</li>
                       <li>• Inventory movements log</li>
+                      <li>• Purchase orders summary</li>
                     </>
                   ) : (
                     <>
                       <li>• Weekly sales comparison</li>
                       <li>• Top performing products</li>
                       <li>• Sales trend analysis</li>
-                      <li>• Forecast accuracy review</li>
+                      <li>• Purchase orders overview</li>
+                      <li>• Stock replenishment history</li>
                     </>
                   )}
                 </ul>
@@ -248,7 +447,7 @@ export const ReportSummaryDialog = ({
             {action === "download" ? (
               <>
                 <Download className="w-4 h-4" />
-                Download Report
+                Download PDF
               </>
             ) : (
               <>
