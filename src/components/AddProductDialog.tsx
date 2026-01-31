@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -7,6 +7,32 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { productsApi, categoriesApi, suppliersApi } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { Plus, Trash2 } from "lucide-react";
+import { ScrollArea } from "./ui/scroll-area";
+
+interface ProductFormData {
+  id: string;
+  name: string;
+  sku: string;
+  category_id: string;
+  supplier_id: string;
+  cost_price: string;
+  retail_price: string;
+  quantity: string;
+  reorder_level: string;
+}
+
+const createEmptyProduct = (): ProductFormData => ({
+  id: crypto.randomUUID(),
+  name: "",
+  sku: "",
+  category_id: "",
+  supplier_id: "",
+  cost_price: "",
+  retail_price: "",
+  quantity: "0",
+  reorder_level: "20",
+});
 
 interface AddProductDialogProps {
   open: boolean;
@@ -15,16 +41,7 @@ interface AddProductDialogProps {
 }
 
 export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDialogProps) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    sku: "",
-    category_id: "",
-    supplier_id: "",
-    cost_price: "",
-    retail_price: "",
-    quantity: "0",
-    reorder_level: "20",
-  });
+  const [products, setProducts] = useState<ProductFormData[]>([createEmptyProduct()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: categories = [] } = useQuery<any[]>({
@@ -37,169 +54,234 @@ export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDi
     queryFn: () => suppliersApi.getAll(),
   });
 
+  const updateProduct = (id: string, field: keyof ProductFormData, value: string) => {
+    setProducts(prev => prev.map(p => 
+      p.id === id ? { ...p, [field]: value } : p
+    ));
+  };
+
+  const addProduct = () => {
+    setProducts(prev => [...prev, createEmptyProduct()]);
+  };
+
+  const removeProduct = (id: string) => {
+    if (products.length === 1) return;
+    setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const resetForm = () => {
+    setProducts([createEmptyProduct()]);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      await productsApi.create({
-        name: formData.name,
-        sku: formData.sku,
-        category_id: formData.category_id ? parseInt(formData.category_id) : undefined,
-        supplier_id: formData.supplier_id ? parseInt(formData.supplier_id) : undefined,
-        cost_price: parseFloat(formData.cost_price),
-        retail_price: parseFloat(formData.retail_price),
-        quantity: parseInt(formData.quantity),
-        reorder_level: parseInt(formData.reorder_level),
-      });
+    let successCount = 0;
+    let failCount = 0;
 
-      setFormData({
-        name: "",
-        sku: "",
-        category_id: "",
-        supplier_id: "",
-        cost_price: "",
-        retail_price: "",
-        quantity: "0",
-        reorder_level: "20",
-      });
-      
-      toast.success("Product added successfully");
+    for (const product of products) {
+      try {
+        await productsApi.create({
+          name: product.name,
+          sku: product.sku,
+          category_id: product.category_id ? parseInt(product.category_id) : undefined,
+          supplier_id: product.supplier_id ? parseInt(product.supplier_id) : undefined,
+          cost_price: parseFloat(product.cost_price),
+          retail_price: parseFloat(product.retail_price),
+          quantity: parseInt(product.quantity),
+          reorder_level: parseInt(product.reorder_level),
+        });
+        successCount++;
+      } catch (error: any) {
+        failCount++;
+        console.error(`Failed to add ${product.name}:`, error);
+      }
+    }
+
+    if (successCount > 0) {
+      toast.success(`${successCount} product${successCount > 1 ? 's' : ''} added successfully`);
+      resetForm();
       if (onSuccess) onSuccess();
       onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to add product");
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
     }
+    if (failCount > 0) {
+      toast.error(`Failed to add ${failCount} product${failCount > 1 ? 's' : ''}`);
+    }
+
+    setIsSubmitting(false);
+  };
+
+  const handleClose = (open: boolean) => {
+    if (!open) {
+      resetForm();
+    }
+    onOpenChange(open);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>Add New Products</DialogTitle>
+          <DialogDescription>
+            Add one or more products to your inventory. Click "Add Another" to add multiple products at once.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Product Name*</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
+        <form onSubmit={handleSubmit}>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-6">
+              {products.map((product, index) => (
+                <div key={product.id} className="space-y-4 p-4 border border-border rounded-lg relative">
+                  {products.length > 1 && (
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-sm font-medium text-muted-foreground">Product {index + 1}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeProduct(product.id)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`name-${product.id}`}>Product Name*</Label>
+                      <Input
+                        id={`name-${product.id}`}
+                        value={product.name}
+                        onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
+                        required
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor={`sku-${product.id}`}>SKU*</Label>
+                      <Input
+                        id={`sku-${product.id}`}
+                        value={product.sku}
+                        onChange={(e) => updateProduct(product.id, 'sku', e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`category-${product.id}`}>Category</Label>
+                      <Select
+                        value={product.category_id}
+                        onValueChange={(value) => updateProduct(product.id, 'category_id', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat: any) => (
+                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`supplier-${product.id}`}>Supplier</Label>
+                      <Select
+                        value={product.supplier_id}
+                        onValueChange={(value) => updateProduct(product.id, 'supplier_id', value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select supplier" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {suppliers.map((sup: any) => (
+                            <SelectItem key={sup.id} value={sup.id.toString()}>
+                              {sup.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`cost_price-${product.id}`}>Cost Price (₱)*</Label>
+                      <Input
+                        id={`cost_price-${product.id}`}
+                        type="number"
+                        step="0.01"
+                        value={product.cost_price}
+                        onChange={(e) => updateProduct(product.id, 'cost_price', e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`retail_price-${product.id}`}>Retail Price (₱)*</Label>
+                      <Input
+                        id={`retail_price-${product.id}`}
+                        type="number"
+                        step="0.01"
+                        value={product.retail_price}
+                        onChange={(e) => updateProduct(product.id, 'retail_price', e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor={`quantity-${product.id}`}>Initial Quantity</Label>
+                      <Input
+                        id={`quantity-${product.id}`}
+                        type="number"
+                        value={product.quantity}
+                        onChange={(e) => updateProduct(product.id, 'quantity', e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`reorder_level-${product.id}`}>Reorder Level</Label>
+                      <Input
+                        id={`reorder_level-${product.id}`}
+                        type="number"
+                        value={product.reorder_level}
+                        onChange={(e) => updateProduct(product.id, 'reorder_level', e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
+          </ScrollArea>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addProduct}
+              className="w-full mb-4"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Another Product
+            </Button>
             
-            <div className="space-y-2">
-              <Label htmlFor="sku">SKU*</Label>
-              <Input
-                id="sku"
-                value={formData.sku}
-                onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                required
-              />
-            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => handleClose(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Adding..." : `Add ${products.length} Product${products.length > 1 ? 's' : ''}`}
+              </Button>
+            </DialogFooter>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
-              <Select
-                value={formData.category_id}
-                onValueChange={(value) => setFormData({ ...formData, category_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((cat: any) => (
-                    <SelectItem key={cat.id} value={cat.id.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="supplier">Supplier</Label>
-              <Select
-                value={formData.supplier_id}
-                onValueChange={(value) => setFormData({ ...formData, supplier_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select supplier" />
-                </SelectTrigger>
-                <SelectContent>
-                  {suppliers.map((sup: any) => (
-                    <SelectItem key={sup.id} value={sup.id.toString()}>
-                      {sup.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="cost_price">Cost Price (₱)*</Label>
-              <Input
-                id="cost_price"
-                type="number"
-                step="0.01"
-                value={formData.cost_price}
-                onChange={(e) => setFormData({ ...formData, cost_price: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="retail_price">Retail Price (₱)*</Label>
-              <Input
-                id="retail_price"
-                type="number"
-                step="0.01"
-                value={formData.retail_price}
-                onChange={(e) => setFormData({ ...formData, retail_price: e.target.value })}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="quantity">Initial Quantity</Label>
-              <Input
-                id="quantity"
-                type="number"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="reorder_level">Reorder Level</Label>
-              <Input
-                id="reorder_level"
-                type="number"
-                value={formData.reorder_level}
-                onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Product"}
-            </Button>
-          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
