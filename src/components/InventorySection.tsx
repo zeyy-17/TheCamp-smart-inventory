@@ -112,6 +112,11 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
 
   const handleEditSuccess = () => {
     setEditDialogOpen(false);
+    // Clear status filter when editing - the product may have changed status
+    if (statusFilter) {
+      onStatusFilterChange(null);
+      toast.info("Filter cleared - product status may have changed");
+    }
     queryClient.invalidateQueries({ queryKey: ['products'] });
   };
 
