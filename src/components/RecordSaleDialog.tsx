@@ -227,7 +227,7 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
             />
           </div>
 
-          <ScrollArea className="max-h-[400px] pr-4">
+          <ScrollArea className="max-h-[400px] pr-4 [&>[data-radix-scroll-area-viewport]]:!block" type="always">
             <div className="space-y-4">
               {storeEntries.map((storeEntry, storeIndex) => (
                 <div key={storeIndex} className="border rounded-lg p-4 space-y-4">
