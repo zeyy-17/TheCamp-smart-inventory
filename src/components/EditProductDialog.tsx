@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -105,6 +105,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Edit Product</DialogTitle>
+          <DialogDescription>Update the product details below. Changes will be saved to the inventory.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -197,22 +198,26 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-quantity">Quantity</Label>
+              <Label htmlFor="edit-quantity">Quantity*</Label>
               <Input
                 id="edit-quantity"
                 type="number"
+                min="0"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-reorder_level">Reorder Level</Label>
+              <Label htmlFor="edit-reorder_level">Reorder Level*</Label>
               <Input
                 id="edit-reorder_level"
                 type="number"
+                min="0"
                 value={formData.reorder_level}
                 onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
+                required
               />
             </div>
           </div>
