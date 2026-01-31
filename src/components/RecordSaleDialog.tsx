@@ -9,8 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Plus, Trash2, Store } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 
 const STORES = ['Ampersand', 'hereX', 'Hardin'] as const;
 
@@ -227,10 +225,10 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
             />
           </div>
 
-          <ScrollArea className="max-h-[400px] pr-4 [&>[data-radix-scroll-area-viewport]]:!block" type="always">
-            <div className="space-y-4">
+          <div className="max-h-[350px] overflow-y-auto border rounded-lg p-2 scrollbar-thin scrollbar-thumb-muted-foreground/30 scrollbar-track-transparent">
+            <div className="space-y-4 pr-2">
               {storeEntries.map((storeEntry, storeIndex) => (
-                <div key={storeIndex} className="border rounded-lg p-4 space-y-4">
+                <div key={storeIndex} className="border rounded-lg p-4 space-y-4 bg-card">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Store className="w-4 h-4 text-muted-foreground" />
@@ -327,23 +325,20 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
                   </Button>
                 </div>
               ))}
-            </div>
-          </ScrollArea>
 
-          {canAddStore && (
-            <>
-              <Separator />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addStore}
-                className="w-full gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Store
-              </Button>
-            </>
-          )}
+              {canAddStore && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addStore}
+                  className="w-full gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Store
+                </Button>
+              )}
+            </div>
+          </div>
 
           {calculateTotalAmount() > 0 && (
             <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
