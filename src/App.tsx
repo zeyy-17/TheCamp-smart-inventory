@@ -15,7 +15,6 @@ import Forecast from "./pages/Forecast";
 import Insights from "./pages/Insights";
 import Reports from "./pages/Reports";
 import PurchaseOrders from "./pages/PurchaseOrders";
-import SalesHistory from "./pages/SalesHistory";
 import Login from "./pages/Login";
 import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
@@ -38,14 +37,13 @@ const AppRoutes = () => {
             <div className="flex min-h-screen">
               <Sidebar />
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<Dashboard />} />
                 <Route path="/inventory" element={<Inventory />} />
                 <Route path="/forecast" element={<Forecast />} />
                 <Route path="/insights" element={<Insights />} />
                 <Route path="/reports" element={<Reports />} />
-              <Route path="/sales-history" element={<SalesHistory />} />
-              <Route path="/purchase-orders" element={<PurchaseOrders />} />
-              <Route path="/account" element={<Account />} />
+                <Route path="/purchase-orders" element={<PurchaseOrders />} />
+                <Route path="/account" element={<Account />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
