@@ -2,14 +2,21 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-// API helper function
+// API helper function with authentication
 async function callEdgeFunction(functionName: string, options: RequestInit = {}) {
   const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
+  
+  // Get the current session and include the access token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error('Not authenticated');
+  }
   
   const response = await fetch(url, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,
       ...options.headers,
     },
   });
