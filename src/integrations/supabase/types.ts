@@ -119,13 +119,6 @@ export type Database = {
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "products_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers_safe"
-            referencedColumns: ["id"]
-          },
         ]
       }
       purchase_orders: {
@@ -181,13 +174,6 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_orders_supplier_id_fkey"
-            columns: ["supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -322,30 +308,7 @@ export type Database = {
       }
     }
     Views: {
-      suppliers_safe: {
-        Row: {
-          contact_email: string | null
-          contact_phone: string | null
-          created_at: string | null
-          id: number | null
-          name: string | null
-        }
-        Insert: {
-          contact_email?: never
-          contact_phone?: never
-          created_at?: string | null
-          id?: number | null
-          name?: string | null
-        }
-        Update: {
-          contact_email?: never
-          contact_phone?: never
-          created_at?: string | null
-          id?: number | null
-          name?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {
