@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,32 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
 import { BulkPurchaseOrderDialog } from '@/components/BulkPurchaseOrderDialog';
-import { Plus, Package } from 'lucide-react';
+import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
+import { Plus, Package, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+const stores = ['All', 'Ampersand', 'hereX', 'Hardin'];
 
 const PurchaseOrders = () => {
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [activeStore, setActiveStore] = useState('All');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -31,11 +51,56 @@ const PurchaseOrders = () => {
     }
   });
 
+  const filteredOrders = orders?.filter(order => 
+    activeStore === 'All' || order.store === activeStore
+  );
+
+  const handleEdit = (order: any) => {
+    setSelectedOrder(order);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (order: any) => {
+    setSelectedOrder(order);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedOrder) return;
+    
+    try {
+      const { error } = await supabase
+        .from('purchase_orders')
+        .delete()
+        .eq('id', selectedOrder.id);
+
+      if (error) throw error;
+      
+      queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      toast.success("Purchase order deleted successfully!");
+    } catch (error) {
+      console.error('Error deleting purchase order:', error);
+      toast.error("Failed to delete purchase order");
+    } finally {
+      setDeleteDialogOpen(false);
+      setSelectedOrder(null);
+    }
+  };
+
   const getStatusColor = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case 'pending': return 'secondary';
       case 'received': return 'default';
       case 'cancelled': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
+  const getStoreColor = (store: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (store) {
+      case 'Ampersand': return 'default';
+      case 'hereX': return 'secondary';
+      case 'Hardin': return 'outline';
       default: return 'secondary';
     }
   };
@@ -62,18 +127,30 @@ const PurchaseOrders = () => {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Package className="h-5 w-5 text-primary" />
-              <CardTitle>All Purchase Orders</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                <CardTitle>All Purchase Orders</CardTitle>
+              </div>
             </div>
             <CardDescription>View all your purchase orders with supplier details</CardDescription>
           </CardHeader>
           <CardContent>
+            <Tabs value={activeStore} onValueChange={setActiveStore} className="mb-4">
+              <TabsList>
+                {stores.map((store) => (
+                  <TabsTrigger key={store} value={store}>
+                    {store}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
-            ) : !orders || orders.length === 0 ? (
+            ) : !filteredOrders || filteredOrders.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No purchase orders found. Create your first order to get started.
+                No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -81,6 +158,7 @@ const PurchaseOrders = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Order ID</TableHead>
+                      <TableHead>Store</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>SKU</TableHead>
                       <TableHead>Supplier</TableHead>
@@ -89,12 +167,18 @@ const PurchaseOrders = () => {
                       <TableHead>Expected Delivery</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Notes</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {orders.map((order: any) => (
+                    {filteredOrders.map((order: any) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">#{order.id}</TableCell>
+                        <TableCell>
+                          <Badge variant={getStoreColor(order.store)}>
+                            {order.store || 'N/A'}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{order.products?.name || 'N/A'}</TableCell>
                         <TableCell className="text-muted-foreground">{order.products?.sku || 'N/A'}</TableCell>
                         <TableCell>{order.suppliers?.name || 'N/A'}</TableCell>
@@ -118,6 +202,24 @@ const PurchaseOrders = () => {
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
                           {order.notes || '-'}
                         </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(order)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(order)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -135,6 +237,28 @@ const PurchaseOrders = () => {
           open={bulkDialogOpen} 
           onOpenChange={setBulkDialogOpen}
         />
+        <EditPurchaseOrderDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          order={selectedOrder}
+        />
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Purchase Order</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this purchase order? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </main>
   );
