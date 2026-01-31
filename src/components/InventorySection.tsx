@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { AddProductDialog } from "@/components/AddProductDialog";
@@ -227,7 +228,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
 
       {/* Inventory Table */}
       <div className="bg-card rounded-xl shadow-custom-md border border-border overflow-hidden">
-        <div className="overflow-x-auto">
+        <ScrollArea className="h-[400px]">
           <table className="w-full">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
@@ -294,7 +295,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
               )}
             </tbody>
           </table>
-        </div>
+        </ScrollArea>
       </div>
 
       {/* Pagination */}

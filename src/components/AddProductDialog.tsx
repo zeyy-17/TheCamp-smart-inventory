@@ -121,21 +121,21 @@ export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDi
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Add New Products</DialogTitle>
           <DialogDescription>
             Add one or more products to your inventory. Click "Add Another" to add multiple products at once.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          <ScrollArea className="flex-1 max-h-[50vh] pr-4">
+            <div className="space-y-4 pb-2">
               {products.map((product, index) => (
-                <div key={product.id} className="space-y-4 p-4 border border-border rounded-lg relative">
-                  {products.length > 1 && (
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-medium text-muted-foreground">Product {index + 1}</span>
+                <div key={product.id} className="space-y-3 p-4 border border-border rounded-lg bg-muted/30">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-semibold text-foreground">Product {index + 1}</span>
+                    {products.length > 1 && (
                       <Button
                         type="button"
                         variant="ghost"
@@ -145,40 +145,72 @@ export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDi
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                    </div>
-                  )}
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`name-${product.id}`}>Product Name*</Label>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor={`name-${product.id}`} className="text-xs">Name*</Label>
                       <Input
                         id={`name-${product.id}`}
                         value={product.name}
                         onChange={(e) => updateProduct(product.id, 'name', e.target.value)}
                         required
+                        className="h-9"
+                        placeholder="Product name"
                       />
                     </div>
                     
-                    <div className="space-y-2">
-                      <Label htmlFor={`sku-${product.id}`}>SKU*</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor={`sku-${product.id}`} className="text-xs">SKU*</Label>
                       <Input
                         id={`sku-${product.id}`}
                         value={product.sku}
                         onChange={(e) => updateProduct(product.id, 'sku', e.target.value)}
                         required
+                        className="h-9"
+                        placeholder="SKU"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor={`cost_price-${product.id}`} className="text-xs">Cost (₱)*</Label>
+                      <Input
+                        id={`cost_price-${product.id}`}
+                        type="number"
+                        step="0.01"
+                        value={product.cost_price}
+                        onChange={(e) => updateProduct(product.id, 'cost_price', e.target.value)}
+                        required
+                        className="h-9"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor={`retail_price-${product.id}`} className="text-xs">Retail (₱)*</Label>
+                      <Input
+                        id={`retail_price-${product.id}`}
+                        type="number"
+                        step="0.01"
+                        value={product.retail_price}
+                        onChange={(e) => updateProduct(product.id, 'retail_price', e.target.value)}
+                        required
+                        className="h-9"
+                        placeholder="0.00"
                       />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`category-${product.id}`}>Category</Label>
+                  <div className="grid grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                      <Label htmlFor={`category-${product.id}`} className="text-xs">Category</Label>
                       <Select
                         value={product.category_id}
                         onValueChange={(value) => updateProduct(product.id, 'category_id', value)}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((cat: any) => (
@@ -190,14 +222,14 @@ export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDi
                       </Select>
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor={`supplier-${product.id}`}>Supplier</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor={`supplier-${product.id}`} className="text-xs">Supplier</Label>
                       <Select
                         value={product.supplier_id}
                         onValueChange={(value) => updateProduct(product.id, 'supplier_id', value)}
                       >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select supplier" />
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Select" />
                         </SelectTrigger>
                         <SelectContent>
                           {suppliers.map((sup: any) => (
@@ -208,52 +240,28 @@ export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDi
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`cost_price-${product.id}`}>Cost Price (₱)*</Label>
-                      <Input
-                        id={`cost_price-${product.id}`}
-                        type="number"
-                        step="0.01"
-                        value={product.cost_price}
-                        onChange={(e) => updateProduct(product.id, 'cost_price', e.target.value)}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`retail_price-${product.id}`}>Retail Price (₱)*</Label>
-                      <Input
-                        id={`retail_price-${product.id}`}
-                        type="number"
-                        step="0.01"
-                        value={product.retail_price}
-                        onChange={(e) => updateProduct(product.id, 'retail_price', e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor={`quantity-${product.id}`}>Initial Quantity</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor={`quantity-${product.id}`} className="text-xs">Quantity</Label>
                       <Input
                         id={`quantity-${product.id}`}
                         type="number"
                         value={product.quantity}
                         onChange={(e) => updateProduct(product.id, 'quantity', e.target.value)}
+                        className="h-9"
+                        placeholder="0"
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor={`reorder_level-${product.id}`}>Reorder Level</Label>
+                    <div className="space-y-1">
+                      <Label htmlFor={`reorder_level-${product.id}`} className="text-xs">Reorder Lvl</Label>
                       <Input
                         id={`reorder_level-${product.id}`}
                         type="number"
                         value={product.reorder_level}
                         onChange={(e) => updateProduct(product.id, 'reorder_level', e.target.value)}
+                        className="h-9"
+                        placeholder="20"
                       />
                     </div>
                   </div>
@@ -262,7 +270,7 @@ export const AddProductDialog = ({ open, onOpenChange, onSuccess }: AddProductDi
             </div>
           </ScrollArea>
 
-          <div className="mt-4 pt-4 border-t border-border">
+          <div className="mt-4 pt-4 border-t border-border flex-shrink-0">
             <Button
               type="button"
               variant="outline"
