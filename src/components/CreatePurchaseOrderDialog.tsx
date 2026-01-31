@@ -218,7 +218,7 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         supplier_id: parseInt(supplierId),
         quantity: item.quantity,
         expected_delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
-        status: 'pending',
+        status: 'received', // Auto-set to received
         store: item.store,
         notes: notes || null,
       }));
@@ -228,6 +228,48 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         .insert(ordersToInsert);
 
       if (error) throw error;
+
+      // Update inventory for each product
+      for (const item of validItems) {
+        const productId = parseInt(item.productId);
+        
+        // Get current product quantity
+        const { data: currentProduct, error: fetchError } = await supabase
+          .from('products')
+          .select('quantity, name')
+          .eq('id', productId)
+          .single();
+
+        if (fetchError) {
+          console.error('Error fetching product:', fetchError);
+          continue;
+        }
+
+        const newQuantity = (currentProduct?.quantity || 0) + item.quantity;
+
+        // Update product quantity
+        const { error: updateError } = await supabase
+          .from('products')
+          .update({ 
+            quantity: newQuantity,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', productId);
+
+        if (updateError) {
+          console.error('Error updating product quantity:', updateError);
+          continue;
+        }
+
+        // Record the movement
+        await supabase
+          .from('movements')
+          .insert({
+            product_id: productId,
+            qty_change: item.quantity,
+            reason: `Purchase Order ${invoiceNumber} - ${item.store}`,
+          });
+      }
       
       // Prepare invoice data
       const selectedSupplier = suppliers?.find(s => s.id.toString() === supplierId);
@@ -252,7 +294,13 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
       });
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      toast.success(`Purchase order ${invoiceNumber} created with ${validItems.length} item(s)!`);
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['products-count'] });
+      queryClient.invalidateQueries({ queryKey: ['low-stock-count'] });
+      queryClient.invalidateQueries({ queryKey: ['movements'] });
+      
+      const totalQty = validItems.reduce((sum, item) => sum + item.quantity, 0);
+      toast.success(`Purchase order ${invoiceNumber} created! Inventory updated with ${totalQty} units.`);
       onOpenChange(false);
       setShowInvoice(true);
       resetForm();
