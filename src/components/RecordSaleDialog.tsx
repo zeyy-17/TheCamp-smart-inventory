@@ -8,18 +8,21 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Plus, Trash2, Store } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
-const saleSchema = z.object({
-  product_id: z.string().min(1, "Please select a product"),
-  quantity: z.number().min(1, "Quantity must be at least 1").max(10000, "Quantity must be less than 10,000"),
-  date_sold: z.string().min(1, "Date is required"),
-});
+const STORES = ['Ampersand', 'hereX', 'Hardin'] as const;
 
-type SaleFormValues = z.infer<typeof saleSchema>;
+interface ProductEntry {
+  productId: string;
+  quantity: number;
+}
+
+interface StoreEntry {
+  store: typeof STORES[number];
+  products: ProductEntry[];
+}
 
 interface RecordSaleDialogProps {
   open: boolean;
@@ -28,16 +31,10 @@ interface RecordSaleDialogProps {
 
 export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) => {
   const queryClient = useQueryClient();
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-
-  const form = useForm<SaleFormValues>({
-    resolver: zodResolver(saleSchema),
-    defaultValues: {
-      product_id: "",
-      quantity: 1,
-      date_sold: format(new Date(), 'yyyy-MM-dd'),
-    },
-  });
+  const [dateSold, setDateSold] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [storeEntries, setStoreEntries] = useState<StoreEntry[]>([
+    { store: 'Ampersand', products: [{ productId: '', quantity: 1 }] }
+  ]);
 
   // Fetch all products
   const { data: products = [] } = useQuery({
@@ -53,45 +50,113 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
     },
   });
 
+  const addStore = () => {
+    const usedStores = storeEntries.map(e => e.store);
+    const availableStore = STORES.find(s => !usedStores.includes(s));
+    if (availableStore) {
+      setStoreEntries([...storeEntries, { 
+        store: availableStore, 
+        products: [{ productId: '', quantity: 1 }] 
+      }]);
+    }
+  };
+
+  const removeStore = (storeIndex: number) => {
+    if (storeEntries.length > 1) {
+      setStoreEntries(storeEntries.filter((_, i) => i !== storeIndex));
+    }
+  };
+
+  const updateStore = (storeIndex: number, store: typeof STORES[number]) => {
+    const updated = [...storeEntries];
+    updated[storeIndex].store = store;
+    setStoreEntries(updated);
+  };
+
+  const addProduct = (storeIndex: number) => {
+    const updated = [...storeEntries];
+    updated[storeIndex].products.push({ productId: '', quantity: 1 });
+    setStoreEntries(updated);
+  };
+
+  const removeProduct = (storeIndex: number, productIndex: number) => {
+    const updated = [...storeEntries];
+    if (updated[storeIndex].products.length > 1) {
+      updated[storeIndex].products = updated[storeIndex].products.filter((_, i) => i !== productIndex);
+      setStoreEntries(updated);
+    }
+  };
+
+  const updateProduct = (storeIndex: number, productIndex: number, field: keyof ProductEntry, value: string | number) => {
+    const updated = [...storeEntries];
+    updated[storeIndex].products[productIndex] = {
+      ...updated[storeIndex].products[productIndex],
+      [field]: value
+    };
+    setStoreEntries(updated);
+  };
+
   // Record sale mutation
   const recordSaleMutation = useMutation({
-    mutationFn: async (values: SaleFormValues) => {
-      const product = products.find(p => p.id === parseInt(values.product_id));
-      if (!product) throw new Error('Product not found');
+    mutationFn: async () => {
+      const saleRecords: Array<{
+        product_id: number;
+        quantity: number;
+        total_amount: number;
+        date_sold: string;
+        store: string;
+      }> = [];
 
-      // Check if enough stock
-      if (product.quantity < values.quantity) {
-        throw new Error(`Insufficient stock. Only ${product.quantity} units available.`);
+      // Validate and prepare all sale records
+      for (const storeEntry of storeEntries) {
+        for (const productEntry of storeEntry.products) {
+          if (!productEntry.productId) continue;
+          
+          const product = products.find(p => p.id === parseInt(productEntry.productId));
+          if (!product) throw new Error('Product not found');
+
+          if (product.quantity < productEntry.quantity) {
+            throw new Error(`Insufficient stock for ${product.name}. Only ${product.quantity} units available.`);
+          }
+
+          saleRecords.push({
+            product_id: parseInt(productEntry.productId),
+            quantity: productEntry.quantity,
+            total_amount: product.retail_price * productEntry.quantity,
+            date_sold: dateSold,
+            store: storeEntry.store,
+          });
+        }
       }
 
-      const totalAmount = product.retail_price * values.quantity;
+      if (saleRecords.length === 0) {
+        throw new Error('Please select at least one product');
+      }
 
-      // Insert sale record
-      const { data: sale, error: saleError } = await supabase
+      // Insert all sale records
+      const { error: saleError } = await supabase
         .from('sales')
-        .insert({
-          product_id: parseInt(values.product_id),
-          quantity: values.quantity,
-          total_amount: totalAmount,
-          date_sold: values.date_sold,
-        })
-        .select()
-        .single();
+        .insert(saleRecords);
 
       if (saleError) throw saleError;
 
-      // Update product quantity
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ 
-          quantity: product.quantity - values.quantity,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', parseInt(values.product_id));
+      // Update product quantities
+      for (const record of saleRecords) {
+        const product = products.find(p => p.id === record.product_id);
+        if (product) {
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ 
+              quantity: product.quantity - record.quantity,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', record.product_id);
 
-      if (updateError) throw updateError;
+          if (updateError) throw updateError;
+        }
+      }
 
-      return sale;
+      return saleRecords;
     },
     onSuccess: () => {
       toast.success('Sale recorded successfully!');
@@ -101,8 +166,8 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
       queryClient.invalidateQueries({ queryKey: ['weekly-sales-chart'] });
       queryClient.invalidateQueries({ queryKey: ['top-products'] });
       queryClient.invalidateQueries({ queryKey: ['products-for-sale'] });
-      form.reset();
-      setSelectedProduct(null);
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      resetForm();
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -110,126 +175,200 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
     },
   });
 
-  const onSubmit = (values: SaleFormValues) => {
-    recordSaleMutation.mutate(values);
+  const resetForm = () => {
+    setDateSold(format(new Date(), 'yyyy-MM-dd'));
+    setStoreEntries([{ store: 'Ampersand', products: [{ productId: '', quantity: 1 }] }]);
   };
 
-  const handleProductChange = (productId: string) => {
-    const product = products.find(p => p.id === parseInt(productId));
-    setSelectedProduct(product);
-    form.setValue('product_id', productId);
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    recordSaleMutation.mutate();
   };
 
-  const quantity = form.watch('quantity');
-  const totalAmount = selectedProduct ? selectedProduct.retail_price * quantity : 0;
+  const getProductById = (productId: string) => {
+    return products.find(p => p.id === parseInt(productId));
+  };
+
+  const calculateTotalAmount = () => {
+    let total = 0;
+    for (const storeEntry of storeEntries) {
+      for (const productEntry of storeEntry.products) {
+        if (productEntry.productId) {
+          const product = getProductById(productEntry.productId);
+          if (product) {
+            total += product.retail_price * productEntry.quantity;
+          }
+        }
+      }
+    }
+    return total;
+  };
+
+  const usedStores = storeEntries.map(e => e.store);
+  const canAddStore = storeEntries.length < STORES.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>Record Sale</DialogTitle>
           <DialogDescription>
-            Log a new sale transaction and update inventory automatically.
+            Log sales transactions across stores. Select multiple products per store.
           </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="product_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product</FormLabel>
-                  <Select onValueChange={handleProductChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a product" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {products.map((product) => (
-                        <SelectItem key={product.id} value={product.id.toString()}>
-                          {product.name} - ₱{product.retail_price} (Stock: {product.quantity})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Date</Label>
+            <Input 
+              type="date" 
+              value={dateSold}
+              onChange={(e) => setDateSold(e.target.value)}
             />
+          </div>
 
-            {selectedProduct && (
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  Unit Price: <span className="font-semibold text-foreground">₱{selectedProduct.retail_price.toLocaleString()}</span>
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Available Stock: <span className="font-semibold text-foreground">{selectedProduct.quantity}</span>
-                </p>
-              </div>
-            )}
+          <ScrollArea className="max-h-[400px] pr-4">
+            <div className="space-y-4">
+              {storeEntries.map((storeEntry, storeIndex) => (
+                <div key={storeIndex} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-4 h-4 text-muted-foreground" />
+                      <Select 
+                        value={storeEntry.store} 
+                        onValueChange={(value) => updateStore(storeIndex, value as typeof STORES[number])}
+                      >
+                        <SelectTrigger className="w-[150px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STORES.filter(s => s === storeEntry.store || !usedStores.includes(s)).map((store) => (
+                            <SelectItem key={store} value={store}>{store}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {storeEntries.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeStore(storeIndex)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
 
-            <FormField
-              control={form.control}
-              name="quantity"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quantity</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="1"
-                      max={selectedProduct?.quantity || 10000}
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <div className="space-y-3">
+                    {storeEntry.products.map((productEntry, productIndex) => {
+                      const selectedProduct = productEntry.productId ? getProductById(productEntry.productId) : null;
+                      return (
+                        <div key={productIndex} className="space-y-2 p-3 bg-muted/50 rounded-md">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1">
+                              <Select 
+                                value={productEntry.productId} 
+                                onValueChange={(value) => updateProduct(storeIndex, productIndex, 'productId', value)}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select product" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {products.map((product) => (
+                                    <SelectItem key={product.id} value={product.id.toString()}>
+                                      {product.name} - ₱{product.retail_price} (Stock: {product.quantity})
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="w-24">
+                              <Input
+                                type="number"
+                                min="1"
+                                max={selectedProduct?.quantity || 10000}
+                                value={productEntry.quantity}
+                                onChange={(e) => updateProduct(storeIndex, productIndex, 'quantity', parseInt(e.target.value) || 1)}
+                                placeholder="Qty"
+                              />
+                            </div>
+                            {storeEntry.products.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeProduct(storeIndex, productIndex)}
+                              >
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                              </Button>
+                            )}
+                          </div>
+                          {selectedProduct && (
+                            <div className="text-xs text-muted-foreground">
+                              Unit: ₱{selectedProduct.retail_price.toLocaleString()} | 
+                              Subtotal: <span className="text-foreground font-medium">₱{(selectedProduct.retail_price * productEntry.quantity).toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
 
-            <FormField
-              control={form.control}
-              name="date_sold"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Date</FormLabel>
-                  <FormControl>
-                    <Input type="date" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => addProduct(storeIndex)}
+                    className="w-full gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Product
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
 
-            {selectedProduct && quantity > 0 && (
-              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <p className="text-lg font-semibold text-foreground">
-                  Total Amount: <span className="text-primary">₱{totalAmount.toLocaleString()}</span>
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-3 justify-end pt-4">
+          {canAddStore && (
+            <>
+              <Separator />
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={addStore}
+                className="w-full gap-2"
               >
-                Cancel
+                <Plus className="w-4 h-4" />
+                Add Store
               </Button>
-              <Button
-                type="submit"
-                disabled={recordSaleMutation.isPending || !selectedProduct}
-              >
-                {recordSaleMutation.isPending ? 'Recording...' : 'Record Sale'}
-              </Button>
+            </>
+          )}
+
+          {calculateTotalAmount() > 0 && (
+            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="text-lg font-semibold text-foreground">
+                Total Amount: <span className="text-primary">₱{calculateTotalAmount().toLocaleString()}</span>
+              </p>
             </div>
-          </form>
-        </Form>
+          )}
+
+          <div className="flex gap-3 justify-end pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={recordSaleMutation.isPending}
+            >
+              {recordSaleMutation.isPending ? 'Recording...' : 'Record Sale'}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
