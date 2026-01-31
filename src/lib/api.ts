@@ -4,7 +4,10 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 // API helper function with authentication
 async function callEdgeFunction(functionName: string, options: RequestInit = {}) {
-  const url = `${SUPABASE_URL}/functions/v1/${functionName}`;
+  // Handle paths like 'products/123' by splitting function name from path
+  const [baseFunctionName, ...pathParts] = functionName.split('/');
+  const pathSuffix = pathParts.length > 0 ? `/${pathParts.join('/')}` : '';
+  const url = `${SUPABASE_URL}/functions/v1/${baseFunctionName}${pathSuffix}`;
   
   // Get the current session and include the access token
   const { data: { session } } = await supabase.auth.getSession();
