@@ -98,7 +98,11 @@ export const EditPurchaseOrderDialog = ({ open, onOpenChange, order }: EditPurch
         toast.error("Please select product and supplier");
         return;
       }
+
+      // Check if status is changing to "received" and wasn't already received
+      const isBeingReceived = formData.status === 'received' && order.status !== 'received';
       
+      // Update the purchase order
       const { error } = await supabase
         .from('purchase_orders')
         .update({
@@ -113,8 +117,53 @@ export const EditPurchaseOrderDialog = ({ open, onOpenChange, order }: EditPurch
         .eq('id', order.id);
 
       if (error) throw error;
+
+      // If order is being received, update product inventory
+      if (isBeingReceived) {
+        const product = products?.find(p => p.id === parseInt(formData.productId));
+        if (product) {
+          // Get current product quantity
+          const { data: currentProduct, error: fetchError } = await supabase
+            .from('products')
+            .select('quantity')
+            .eq('id', parseInt(formData.productId))
+            .single();
+
+          if (fetchError) throw fetchError;
+
+          const newQuantity = (currentProduct?.quantity || 0) + quantity;
+
+          // Update product quantity
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ 
+              quantity: newQuantity,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', parseInt(formData.productId));
+
+          if (updateError) throw updateError;
+
+          // Record the movement
+          const { error: movementError } = await supabase
+            .from('movements')
+            .insert({
+              product_id: parseInt(formData.productId),
+              qty_change: quantity,
+              reason: `Purchase Order #${order.id} received (${formData.store})`,
+            });
+
+          if (movementError) throw movementError;
+
+          toast.success(`Inventory updated! Added ${quantity} units to ${product.name}`);
+        }
+      }
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['products-count'] });
+      queryClient.invalidateQueries({ queryKey: ['low-stock-count'] });
+      queryClient.invalidateQueries({ queryKey: ['movements'] });
       toast.success("Purchase order updated successfully!");
       onOpenChange(false);
     } catch (error) {
