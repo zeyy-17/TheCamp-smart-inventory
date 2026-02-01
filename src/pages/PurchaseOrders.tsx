@@ -52,9 +52,41 @@ const PurchaseOrders = () => {
     }
   });
 
+  // For store-specific tabs, filter normally
   const filteredOrders = orders?.filter(order => 
     activeStore === 'All' || order.store === activeStore
   );
+
+  // For "All" tab, group orders by invoice number to show consolidated view
+  const groupedByInvoice = activeStore === 'All' && orders 
+    ? orders.reduce((acc, order) => {
+        const invoiceNum = order.invoice_number || `#${order.id}`;
+        if (!acc[invoiceNum]) {
+          acc[invoiceNum] = {
+            invoiceNumber: invoiceNum,
+            orders: [],
+            stores: new Set<string>(),
+            products: [] as Array<{ name: string; sku: string; quantity: number; store: string }>,
+            supplier: order.suppliers,
+            expectedDeliveryDate: order.expected_delivery_date,
+            status: order.status,
+            notes: order.notes,
+            firstOrder: order,
+          };
+        }
+        acc[invoiceNum].orders.push(order);
+        if (order.store) acc[invoiceNum].stores.add(order.store);
+        acc[invoiceNum].products.push({
+          name: order.products?.name || 'Unknown',
+          sku: order.products?.sku || 'N/A',
+          quantity: order.quantity,
+          store: order.store || 'N/A',
+        });
+        return acc;
+      }, {} as Record<string, any>)
+    : {};
+
+  const groupedInvoices = Object.values(groupedByInvoice);
 
   const handleEdit = (order: any) => {
     setSelectedOrder(order);
@@ -173,7 +205,7 @@ const PurchaseOrders = () => {
 
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
-            ) : !filteredOrders || filteredOrders.length === 0 ? (
+            ) : (activeStore === 'All' ? groupedInvoices.length === 0 : !filteredOrders || filteredOrders.length === 0) ? (
               <div className="text-center py-8 text-muted-foreground">
                 No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
@@ -183,12 +215,10 @@ const PurchaseOrders = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Invoice #</TableHead>
-                      <TableHead>Store</TableHead>
-                      <TableHead>Product</TableHead>
-                      <TableHead>SKU</TableHead>
+                      <TableHead>Store(s)</TableHead>
+                      <TableHead>Products</TableHead>
                       <TableHead>Supplier</TableHead>
                       <TableHead>Contact</TableHead>
-                      <TableHead>Quantity</TableHead>
                       <TableHead>Expected Delivery</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Notes</TableHead>
@@ -196,77 +226,154 @@ const PurchaseOrders = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredOrders.map((order: any) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
-                            onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
-                          >
-                            <FileText className="h-3 w-3 text-muted-foreground" />
-                            {order.invoice_number || `#${order.id}`}
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStoreColor(order.store)}>
-                            {order.store || 'N/A'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{order.products?.name || 'N/A'}</TableCell>
-                        <TableCell className="text-muted-foreground">{order.products?.sku || 'N/A'}</TableCell>
-                        <TableCell>{order.suppliers?.name || 'N/A'}</TableCell>
-                        <TableCell className="text-sm">
-                          {order.suppliers?.contact_email && (
-                            <div>{order.suppliers.contact_email}</div>
-                          )}
-                          {order.suppliers?.contact_phone && (
-                            <div className="text-muted-foreground">{order.suppliers.contact_phone}</div>
-                          )}
-                        </TableCell>
-                        <TableCell>{order.quantity}</TableCell>
-                        <TableCell>
-                          {format(new Date(order.expected_delivery_date), 'MMM dd, yyyy')}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getStatusColor(order.status)}>
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                          {order.notes || '-'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
+                    {activeStore === 'All' ? (
+                      // Grouped view for "All" tab - shows invoice with all stores
+                      groupedInvoices.map((group: any) => (
+                        <TableRow key={group.invoiceNumber}>
+                          <TableCell className="font-medium">
                             <Button
                               variant="ghost"
-                              size="icon"
+                              size="sm"
+                              className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
+                              onClick={() => handleViewInvoice(group.invoiceNumber)}
+                            >
+                              <FileText className="h-3 w-3 text-muted-foreground" />
+                              {group.invoiceNumber}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {Array.from(group.stores).map((store: string) => (
+                                <Badge key={store} variant={getStoreColor(store)}>
+                                  {store}
+                                </Badge>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1 max-w-xs">
+                              {group.products.map((product: any, idx: number) => (
+                                <div key={idx} className="text-sm">
+                                  <span className="font-medium">{product.name}</span>
+                                  <span className="text-muted-foreground"> ({product.sku})</span>
+                                  <span className="text-muted-foreground"> × {product.quantity}</span>
+                                  <Badge variant="outline" className="ml-1 text-xs">{product.store}</Badge>
+                                </div>
+                              ))}
+                            </div>
+                          </TableCell>
+                          <TableCell>{group.supplier?.name || 'N/A'}</TableCell>
+                          <TableCell className="text-sm">
+                            {group.supplier?.contact_email && (
+                              <div>{group.supplier.contact_email}</div>
+                            )}
+                            {group.supplier?.contact_phone && (
+                              <div className="text-muted-foreground">{group.supplier.contact_phone}</div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {format(new Date(group.expectedDeliveryDate), 'MMM dd, yyyy')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusColor(group.status)}>
+                              {group.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                            {group.notes || '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleViewInvoice(group.invoiceNumber)}
+                                title="View Invoice"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      // Individual view for store-specific tabs
+                      filteredOrders.map((order: any) => (
+                        <TableRow key={order.id}>
+                          <TableCell className="font-medium">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
                               onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
-                              title="View Invoice"
                             >
-                              <Eye className="h-4 w-4" />
+                              <FileText className="h-3 w-3 text-muted-foreground" />
+                              {order.invoice_number || `#${order.id}`}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEdit(order)}
-                              title="Edit"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteClick(order)}
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStoreColor(order.store)}>
+                              {order.store || 'N/A'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <span className="font-medium">{order.products?.name || 'N/A'}</span>
+                              <span className="text-muted-foreground"> ({order.products?.sku || 'N/A'})</span>
+                              <span className="text-muted-foreground"> × {order.quantity}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{order.suppliers?.name || 'N/A'}</TableCell>
+                          <TableCell className="text-sm">
+                            {order.suppliers?.contact_email && (
+                              <div>{order.suppliers.contact_email}</div>
+                            )}
+                            {order.suppliers?.contact_phone && (
+                              <div className="text-muted-foreground">{order.suppliers.contact_phone}</div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {format(new Date(order.expected_delivery_date), 'MMM dd, yyyy')}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={getStatusColor(order.status)}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                            {order.notes || '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
+                                title="View Invoice"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEdit(order)}
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeleteClick(order)}
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
