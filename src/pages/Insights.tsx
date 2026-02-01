@@ -216,6 +216,7 @@ const Insights = () => {
         navigate('/inventory');
         break;
       case "View Sales":
+        console.log("View Sales clicked for:", insight?.productName);
         if (insight) {
           setSelectedProduct({ name: insight.productName, id: insight.productId });
           setSalesChartOpen(true);
