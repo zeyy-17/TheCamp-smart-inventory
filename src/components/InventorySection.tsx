@@ -8,8 +8,9 @@ import { AddProductDialog } from "@/components/AddProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { productsApi, categoriesApi } from "@/lib/api";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { categoriesApi } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 interface InventorySectionProps {
@@ -40,7 +41,18 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
   // Fetch products
   const { data: products = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['products'],
-    queryFn: () => productsApi.getAll(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          supplier:suppliers(*),
+          category:categories(*)
+        `)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   // Get unique category names
@@ -90,20 +102,32 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
     setEditDialogOpen(true);
   };
 
-  const handleRemoveProduct = async () => {
-    if (!productToDelete) return;
-    
-    try {
-      await productsApi.delete(productToDelete);
+  const deleteMutation = useMutation({
+    mutationFn: async (productId: number) => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
       toast.success("Product removed successfully");
       queryClient.invalidateQueries({ queryKey: ['products'] });
-    } catch (error) {
-      toast.error("Failed to remove product");
-      console.error(error);
-    } finally {
+      queryClient.invalidateQueries({ queryKey: ['top-products'] });
+    },
+    onError: (error: any) => {
+      console.error("Delete error:", error);
+      toast.error(error.message || "Failed to remove product");
+    },
+    onSettled: () => {
       setDeleteDialogOpen(false);
       setProductToDelete(null);
-    }
+    },
+  });
+
+  const handleRemoveProduct = () => {
+    if (!productToDelete) return;
+    deleteMutation.mutate(productToDelete);
   };
 
   const handleAddSuccess = () => {
