@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.movements]
 verify_jwt = false
+
+[functions.generate-forecast]
+verify_jwt = false
+
+[functions.generate-promotion]
+verify_jwt = false
