@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
 import { AIPromotionDialog } from "@/components/AIPromotionDialog";
+import { SalesChartDialog } from "@/components/SalesChartDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -26,6 +27,7 @@ const Insights = () => {
   const navigate = useNavigate();
   const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
+  const [salesChartOpen, setSalesChartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{ name?: string; id?: number } | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [generatedInsights, setGeneratedInsights] = useState<Insight[]>([]);
@@ -214,7 +216,10 @@ const Insights = () => {
         navigate('/inventory');
         break;
       case "View Sales":
-        navigate('/sales-history');
+        if (insight) {
+          setSelectedProduct({ name: insight.productName, id: insight.productId });
+          setSalesChartOpen(true);
+        }
         break;
       case "Plan Promotion":
         if (insight) {
@@ -452,6 +457,12 @@ const Insights = () => {
       <AIPromotionDialog 
         open={promotionDialogOpen} 
         onOpenChange={setPromotionDialogOpen}
+        productName={selectedProduct?.name}
+        productId={selectedProduct?.id}
+      />
+      <SalesChartDialog
+        open={salesChartOpen}
+        onOpenChange={setSalesChartOpen}
         productName={selectedProduct?.name}
         productId={selectedProduct?.id}
       />
