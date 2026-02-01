@@ -18,6 +18,11 @@ interface Recommendation {
   priority: string;
 }
 
+interface AppliedPromotion {
+  recommendation: Recommendation;
+  appliedAt: string;
+}
+
 interface PromotionPlan {
   recommendations: Recommendation[];
   summary: {
@@ -39,6 +44,31 @@ interface AIPromotionDialogProps {
 export const AIPromotionDialog = ({ open, onOpenChange, productName, productId }: AIPromotionDialogProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [promotionPlan, setPromotionPlan] = useState<PromotionPlan | null>(null);
+  const [appliedPromotions, setAppliedPromotions] = useState<AppliedPromotion[]>([]);
+
+  const applyPromotion = (rec: Recommendation) => {
+    const alreadyApplied = appliedPromotions.some(
+      (p) => p.recommendation.title === rec.title && p.recommendation.targetProduct === rec.targetProduct
+    );
+
+    if (alreadyApplied) {
+      toast.info(`"${rec.title}" promotion is already applied!`);
+      return;
+    }
+
+    setAppliedPromotions((prev) => [
+      ...prev,
+      { recommendation: rec, appliedAt: new Date().toISOString() }
+    ]);
+
+    toast.success(
+      `Promotion Applied: ${rec.title}`,
+      {
+        description: `${rec.discountPercent}% off on ${rec.targetProduct} for ${rec.duration} days. Expected: ${rec.expectedImpact}`,
+        duration: 5000,
+      }
+    );
+  };
 
   const generatePromotions = async () => {
     setIsLoading(true);
@@ -192,8 +222,12 @@ export const AIPromotionDialog = ({ open, onOpenChange, productName, productId }
                       <span className="text-sm text-muted-foreground">
                         Target: <strong>{rec.targetProduct}</strong>
                       </span>
-                      <Button size="sm" variant="outline">
-                        Apply Promotion
+                      <Button 
+                        size="sm" 
+                        variant={appliedPromotions.some(p => p.recommendation.title === rec.title && p.recommendation.targetProduct === rec.targetProduct) ? "default" : "outline"}
+                        onClick={() => applyPromotion(rec)}
+                      >
+                        {appliedPromotions.some(p => p.recommendation.title === rec.title && p.recommendation.targetProduct === rec.targetProduct) ? "Applied ✓" : "Apply Promotion"}
                       </Button>
                     </div>
                   </CardContent>
