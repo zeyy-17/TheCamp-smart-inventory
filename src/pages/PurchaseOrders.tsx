@@ -52,33 +52,9 @@ const PurchaseOrders = () => {
     }
   });
 
-  // Filter orders by store
   const filteredOrders = orders?.filter(order => 
     activeStore === 'All' || order.store === activeStore
   );
-
-  // Group orders by invoice for better display in All tab
-  const groupedByInvoice = filteredOrders?.reduce((acc, order) => {
-    const invoiceNum = order.invoice_number || `#${order.id}`;
-    if (!acc[invoiceNum]) {
-      acc[invoiceNum] = [];
-    }
-    acc[invoiceNum].push(order);
-    return acc;
-  }, {} as Record<string, typeof filteredOrders>);
-
-  // Sort orders by store for All tab, otherwise keep by date
-  const sortedFilteredOrders = activeStore === 'All' 
-    ? [...(filteredOrders || [])].sort((a, b) => {
-        // First sort by store
-        const storeOrder = { 'Ampersand': 0, 'hereX': 1, 'Hardin': 2 };
-        const storeCompare = (storeOrder[a.store as keyof typeof storeOrder] ?? 3) - 
-                            (storeOrder[b.store as keyof typeof storeOrder] ?? 3);
-        if (storeCompare !== 0) return storeCompare;
-        // Then by date (newest first)
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      })
-    : filteredOrders;
 
   const handleEdit = (order: any) => {
     setSelectedOrder(order);
@@ -95,16 +71,10 @@ const PurchaseOrders = () => {
     setInvoiceDialogOpen(true);
   };
 
-  // Get invoice items for the selected invoice, filtered by store if not "All"
+  // Get invoice items for the selected invoice
   const getInvoiceItems = () => {
     if (!selectedInvoice || !orders) return [];
-    let invoiceOrders = orders.filter(o => o.invoice_number === selectedInvoice);
-    
-    // If viewing from a specific store tab, only show items for that store
-    if (activeStore !== 'All') {
-      invoiceOrders = invoiceOrders.filter(o => o.store === activeStore);
-    }
-    
+    const invoiceOrders = orders.filter(o => o.invoice_number === selectedInvoice);
     return invoiceOrders.map(order => ({
       productName: order.products?.name || 'Unknown',
       sku: order.products?.sku || 'N/A',
@@ -117,13 +87,7 @@ const PurchaseOrders = () => {
 
   const getInvoiceData = () => {
     if (!selectedInvoice || !orders) return null;
-    let invoiceOrders = orders.filter(o => o.invoice_number === selectedInvoice);
-    
-    // If viewing from a specific store tab, only show items for that store
-    if (activeStore !== 'All') {
-      invoiceOrders = invoiceOrders.filter(o => o.store === activeStore);
-    }
-    
+    const invoiceOrders = orders.filter(o => o.invoice_number === selectedInvoice);
     if (invoiceOrders.length === 0) return null;
     const firstOrder = invoiceOrders[0];
     return {
@@ -209,7 +173,7 @@ const PurchaseOrders = () => {
 
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
-            ) : !sortedFilteredOrders || sortedFilteredOrders.length === 0 ? (
+            ) : !filteredOrders || filteredOrders.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
@@ -232,7 +196,7 @@ const PurchaseOrders = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedFilteredOrders.map((order: any) => (
+                    {filteredOrders.map((order: any) => (
                       <TableRow key={order.id}>
                         <TableCell className="font-medium">
                           <Button
