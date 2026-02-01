@@ -212,13 +212,24 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
     }
     
     try {
-      const ordersToInsert = validItems.map(item => ({
+      // Aggregate quantities for the same product+store combination to prevent duplicates
+      const aggregatedItems = validItems.reduce((acc, item) => {
+        const key = `${item.store}-${item.productId}`;
+        if (acc[key]) {
+          acc[key].quantity += item.quantity;
+        } else {
+          acc[key] = { ...item };
+        }
+        return acc;
+      }, {} as Record<string, typeof validItems[0]>);
+
+      const ordersToInsert = Object.values(aggregatedItems).map(item => ({
         invoice_number: invoiceNumber,
         product_id: parseInt(item.productId),
         supplier_id: parseInt(supplierId),
         quantity: item.quantity,
         expected_delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
-        status: 'received', // Auto-set to received
+        status: 'pending', // Initial status is pending
         store: item.store,
         notes: notes || null,
       }));
@@ -228,52 +239,10 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         .insert(ordersToInsert);
 
       if (error) throw error;
-
-      // Update inventory for each product
-      for (const item of validItems) {
-        const productId = parseInt(item.productId);
-        
-        // Get current product quantity
-        const { data: currentProduct, error: fetchError } = await supabase
-          .from('products')
-          .select('quantity, name')
-          .eq('id', productId)
-          .single();
-
-        if (fetchError) {
-          console.error('Error fetching product:', fetchError);
-          continue;
-        }
-
-        const newQuantity = (currentProduct?.quantity || 0) + item.quantity;
-
-        // Update product quantity
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ 
-            quantity: newQuantity,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', productId);
-
-        if (updateError) {
-          console.error('Error updating product quantity:', updateError);
-          continue;
-        }
-
-        // Record the movement
-        await supabase
-          .from('movements')
-          .insert({
-            product_id: productId,
-            qty_change: item.quantity,
-            reason: `Purchase Order ${invoiceNumber} - ${item.store}`,
-          });
-      }
       
-      // Prepare invoice data
+      // Prepare invoice data using aggregated items
       const selectedSupplier = suppliers?.find(s => s.id.toString() === supplierId);
-      const invoiceItems: InvoiceItem[] = validItems.map(item => {
+      const invoiceItems: InvoiceItem[] = Object.values(aggregatedItems).map(item => {
         const product = products?.find(p => p.id.toString() === item.productId);
         const unitPrice = product?.cost_price || 0;
         return {
@@ -299,8 +268,8 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
       queryClient.invalidateQueries({ queryKey: ['low-stock-count'] });
       queryClient.invalidateQueries({ queryKey: ['movements'] });
       
-      const totalQty = validItems.reduce((sum, item) => sum + item.quantity, 0);
-      toast.success(`Purchase order ${invoiceNumber} created! Inventory updated with ${totalQty} units.`);
+      const totalQty = Object.values(aggregatedItems).reduce((sum, item) => sum + item.quantity, 0);
+      toast.success(`Purchase order ${invoiceNumber} created with ${totalQty} units (pending delivery).`);
       onOpenChange(false);
       setShowInvoice(true);
       resetForm();
