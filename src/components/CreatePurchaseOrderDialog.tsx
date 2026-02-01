@@ -239,6 +239,33 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         .insert(ordersToInsert);
 
       if (error) throw error;
+
+      // Update product quantities in inventory
+      for (const item of Object.values(aggregatedItems)) {
+        // Fetch current quantity
+        const { data: productData } = await supabase
+          .from('products')
+          .select('quantity')
+          .eq('id', parseInt(item.productId))
+          .single();
+        
+        if (productData) {
+          const newQuantity = (productData.quantity || 0) + item.quantity;
+          await supabase
+            .from('products')
+            .update({ quantity: newQuantity })
+            .eq('id', parseInt(item.productId));
+          
+          // Record movement for audit trail
+          await supabase
+            .from('movements')
+            .insert({
+              product_id: parseInt(item.productId),
+              qty_change: item.quantity,
+              reason: `Purchase Order ${invoiceNumber} - ${item.store}`
+            });
+        }
+      }
       
       // Prepare invoice data using aggregated items
       const selectedSupplier = suppliers?.find(s => s.id.toString() === supplierId);
