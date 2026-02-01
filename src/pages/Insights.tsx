@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
-import { productsApi, salesApi } from "@/lib/api";
+import { AIPromotionDialog } from "@/components/AIPromotionDialog";
+import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
 interface Insight {
@@ -15,6 +16,8 @@ interface Insight {
   description: string;
   action?: string;
   category: "active" | "opportunity" | "critical";
+  productName?: string;
+  productId?: number;
 }
 
 type FilterType = "all" | "active" | "opportunities" | "critical" | "accuracy";
@@ -22,19 +25,33 @@ type FilterType = "all" | "active" | "opportunities" | "critical" | "accuracy";
 const Insights = () => {
   const navigate = useNavigate();
   const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
+  const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<{ name?: string; id?: number } | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [generatedInsights, setGeneratedInsights] = useState<Insight[]>([]);
 
   // Fetch products data
   const { data: products = [], isLoading: productsLoading } = useQuery({
     queryKey: ['products-insights'],
-    queryFn: () => productsApi.getAll(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, suppliers(name), categories(name)');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   // Fetch sales data
   const { data: sales = [], isLoading: salesLoading } = useQuery({
     queryKey: ['sales-insights'],
-    queryFn: () => salesApi.getAll(),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sales')
+        .select('*, products(name)');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   // Generate insights based on real data
@@ -59,7 +76,9 @@ const Insights = () => {
         title: `Out of Stock: ${product.name}`,
         description: `${product.name} (SKU: ${product.sku}) is completely out of stock. Immediate restocking required to avoid lost sales.`,
         action: "Create Purchase Order",
-        category: "critical"
+        category: "critical",
+        productName: product.name,
+        productId: product.id
       });
     });
 
@@ -69,7 +88,9 @@ const Insights = () => {
         title: `Low Stock Alert: ${product.name}`,
         description: `Only ${product.quantity} units remaining (reorder level: ${product.reorder_level}). Consider restocking soon.`,
         action: "Create Purchase Order",
-        category: "critical"
+        category: "critical",
+        productName: product.name,
+        productId: product.id
       });
     });
 
@@ -88,8 +109,10 @@ const Insights = () => {
         type: "opportunity",
         title: `High Margin Opportunity: ${product.name}`,
         description: `${product.name} has a ${product.margin.toFixed(1)}% profit margin. Consider promoting this product to increase revenue.`,
-        action: "View Product",
-        category: "opportunity"
+        action: "Plan Promotion",
+        category: "opportunity",
+        productName: product.name,
+        productId: product.id
       });
     });
 
@@ -115,7 +138,9 @@ const Insights = () => {
             title: `Top Seller: ${product.name}`,
             description: `${product.name} is one of your best-selling products with ${productSales[productId]} units sold. Consider bundling or upselling.`,
             action: "View Sales",
-            category: "opportunity"
+            category: "opportunity",
+            productName: product.name,
+            productId: product.id
           });
         }
       });
@@ -132,7 +157,9 @@ const Insights = () => {
         title: `Set Reorder Level: ${product.name}`,
         description: `${product.name} has no reorder level configured. Set a reorder point to enable automatic low-stock alerts.`,
         action: "Edit Product",
-        category: "active"
+        category: "active",
+        productName: product.name,
+        productId: product.id
       });
     });
 
@@ -147,7 +174,9 @@ const Insights = () => {
         title: `Overstock Alert: ${product.name}`,
         description: `${product.name} has ${product.quantity} units in stock, which is 5x above reorder level. Consider running a promotion.`,
         action: "Plan Promotion",
-        category: "active"
+        category: "active",
+        productName: product.name,
+        productId: product.id
       });
     });
 
@@ -167,13 +196,15 @@ const Insights = () => {
         title: `Low Margin: ${product.name}`,
         description: `${product.name} has only ${product.margin.toFixed(1)}% margin. Review pricing or supplier costs to improve profitability.`,
         action: "Review Pricing",
-        category: "active"
+        category: "active",
+        productName: product.name,
+        productId: product.id
       });
     });
 
     setGeneratedInsights(insights);
   };
-  const handleAction = (actionType: string) => {
+  const handleAction = (actionType: string, insight?: Insight) => {
     switch (actionType) {
       case "Create Purchase Order":
         navigate('/purchase-orders');
@@ -186,7 +217,12 @@ const Insights = () => {
         navigate('/sales-history');
         break;
       case "Plan Promotion":
-        toast.success("Opening promotion planner...");
+        if (insight) {
+          setSelectedProduct({ name: insight.productName, id: insight.productId });
+        } else {
+          setSelectedProduct(null);
+        }
+        setPromotionDialogOpen(true);
         break;
       case "Review Pricing":
         navigate('/inventory');
@@ -379,7 +415,7 @@ const Insights = () => {
                   title={insight.title}
                   description={insight.description}
                   action={insight.action}
-                  onAction={() => handleAction(insight.action || "")}
+                  onAction={() => handleAction(insight.action || "", insight)}
                 />
               ))}
             </div>
@@ -413,6 +449,12 @@ const Insights = () => {
       </div>
 
       <CreatePurchaseOrderDialog open={purchaseOrderOpen} onOpenChange={setPurchaseOrderOpen} />
+      <AIPromotionDialog 
+        open={promotionDialogOpen} 
+        onOpenChange={setPromotionDialogOpen}
+        productName={selectedProduct?.name}
+        productId={selectedProduct?.id}
+      />
     </div>
   );
 };
