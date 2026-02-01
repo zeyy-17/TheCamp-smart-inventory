@@ -5,8 +5,9 @@ import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { productsApi, categoriesApi, suppliersApi } from "@/lib/api";
-import { useQuery } from "@tanstack/react-query";
+import { categoriesApi, suppliersApi } from "@/lib/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EditProductDialogProps {
   open: boolean;
@@ -26,7 +27,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
     quantity: "",
     reorder_level: "",
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: categories = [] } = useQuery<any[]>({
     queryKey: ['categories'],
@@ -53,35 +54,26 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
     }
   }, [product]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!product) return;
-    
-    setIsSubmitting(true);
+  const updateMutation = useMutation({
+    mutationFn: async (updateData: Record<string, any>) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update(updateData)
+        .eq('id', product.id)
+        .select(`
+          *,
+          supplier:suppliers(*),
+          category:categories(*)
+        `)
+        .single();
 
-    try {
-      const updateData: Record<string, any> = {
-        name: formData.name.trim(),
-        sku: formData.sku.trim(),
-        cost_price: parseFloat(formData.cost_price) || 0,
-        retail_price: parseFloat(formData.retail_price) || 0,
-        quantity: parseInt(formData.quantity) || 0,
-        reorder_level: parseInt(formData.reorder_level) || 0,
-      };
-
-      // Only include category_id and supplier_id if they have values
-      if (formData.category_id) {
-        updateData.category_id = parseInt(formData.category_id);
-      }
-      if (formData.supplier_id) {
-        updateData.supplier_id = parseInt(formData.supplier_id);
-      }
-
-      const updatedProduct = await productsApi.update(product.id, updateData);
-      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
       // Determine the new status based on quantity and reorder level
-      const quantity = updateData.quantity;
-      const reorderLevel = updateData.reorder_level;
+      const quantity = data.quantity;
+      const reorderLevel = data.reorder_level;
       let statusMessage = "In Stock";
       if (quantity === 0) {
         statusMessage = "Out of Stock";
@@ -90,14 +82,40 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
       }
 
       toast.success(`Product updated successfully - Status: ${statusMessage}`);
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['top-products'] });
       onOpenChange(false);
       if (onSuccess) onSuccess();
-    } catch (error: any) {
+    },
+    onError: (error: any) => {
       console.error("Update error:", error);
       toast.error(error.message || "Failed to update product");
-    } finally {
-      setIsSubmitting(false);
+    },
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product) return;
+
+    const updateData: Record<string, any> = {
+      name: formData.name.trim(),
+      sku: formData.sku.trim(),
+      cost_price: parseFloat(formData.cost_price) || 0,
+      retail_price: parseFloat(formData.retail_price) || 0,
+      quantity: parseInt(formData.quantity) || 0,
+      reorder_level: parseInt(formData.reorder_level) || 0,
+    };
+
+    // Only include category_id and supplier_id if they have values
+    if (formData.category_id) {
+      updateData.category_id = parseInt(formData.category_id);
     }
+    if (formData.supplier_id) {
+      updateData.supplier_id = parseInt(formData.supplier_id);
+    }
+
+    updateMutation.mutate(updateData);
   };
 
   return (
@@ -226,8 +244,8 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Updating..." : "Update Product"}
+            <Button type="submit" disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Updating..." : "Update Product"}
             </Button>
           </DialogFooter>
         </form>
