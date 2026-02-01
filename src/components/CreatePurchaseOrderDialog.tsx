@@ -218,7 +218,7 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         supplier_id: parseInt(supplierId),
         quantity: item.quantity,
         expected_delivery_date: format(deliveryDate, 'yyyy-MM-dd'),
-        status: 'received', // Auto-set to received
+        status: 'pending', // Initial status is pending - inventory updated when marked received
         store: item.store,
         notes: notes || null,
       }));
@@ -228,79 +228,11 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
         .insert(ordersToInsert);
 
       if (error) throw error;
-
-      // Update inventory for each product
-      for (const item of validItems) {
-        const productId = parseInt(item.productId);
-        
-        // Get current product quantity
-        const { data: currentProduct, error: fetchError } = await supabase
-          .from('products')
-          .select('quantity, name')
-          .eq('id', productId)
-          .single();
-
-        if (fetchError) {
-          console.error('Error fetching product:', fetchError);
-          continue;
-        }
-
-        const newQuantity = (currentProduct?.quantity || 0) + item.quantity;
-
-        // Update product quantity
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ 
-            quantity: newQuantity,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', productId);
-
-        if (updateError) {
-          console.error('Error updating product quantity:', updateError);
-          continue;
-        }
-
-        // Record the movement
-        await supabase
-          .from('movements')
-          .insert({
-            product_id: productId,
-            qty_change: item.quantity,
-            reason: `Purchase Order ${invoiceNumber} - ${item.store}`,
-          });
-      }
-      
-      // Prepare invoice data
-      const selectedSupplier = suppliers?.find(s => s.id.toString() === supplierId);
-      const invoiceItems: InvoiceItem[] = validItems.map(item => {
-        const product = products?.find(p => p.id.toString() === item.productId);
-        const unitPrice = product?.cost_price || 0;
-        return {
-          productName: product?.name || 'Unknown',
-          sku: product?.sku || 'N/A',
-          store: item.store,
-          quantity: item.quantity,
-          unitPrice,
-          totalPrice: item.quantity * unitPrice,
-        };
-      });
-
-      setInvoiceData({
-        invoiceNumber,
-        supplierName: selectedSupplier?.name || 'Unknown',
-        deliveryDate,
-        items: invoiceItems,
-      });
       
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['products-count'] });
-      queryClient.invalidateQueries({ queryKey: ['low-stock-count'] });
-      queryClient.invalidateQueries({ queryKey: ['movements'] });
       
       const totalQty = validItems.reduce((sum, item) => sum + item.quantity, 0);
-      toast.success(`Purchase order ${invoiceNumber} created! Inventory updated with ${totalQty} units.`);
+      toast.success(`Purchase order ${invoiceNumber} created with ${totalQty} units (pending delivery).`);
       onOpenChange(false);
       setShowInvoice(true);
       resetForm();
