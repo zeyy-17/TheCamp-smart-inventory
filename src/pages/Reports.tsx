@@ -288,26 +288,6 @@ const Reports = () => {
           })}
         </div>
 
-        {/* Scheduled Reports */}
-        <div className="bg-card rounded-xl p-6 shadow-custom-md border border-border">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Scheduled Reports</h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-              <div>
-                <p className="font-medium text-foreground">Weekly Inventory Summary</p>
-                <p className="text-sm text-muted-foreground">Every Monday at 9:00 AM</p>
-              </div>
-              <Button variant="outline" size="sm">Edit Schedule</Button>
-            </div>
-            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
-              <div>
-                <p className="font-medium text-foreground">Monthly Performance Report</p>
-                <p className="text-sm text-muted-foreground">First day of each month at 8:00 AM</p>
-              </div>
-              <Button variant="outline" size="sm">Edit Schedule</Button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <ReportSummaryDialog
