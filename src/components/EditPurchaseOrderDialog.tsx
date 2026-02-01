@@ -102,6 +102,9 @@ export const EditPurchaseOrderDialog = ({ open, onOpenChange, order }: EditPurch
       // Check if status is changing to "received" and wasn't already received
       const isBeingReceived = formData.status === 'received' && order.status !== 'received';
       
+      // Check if status is changing FROM "received" to something else (reversing)
+      const isBeingUnreceived = order.status === 'received' && formData.status !== 'received';
+      
       // Update the purchase order
       const { error } = await supabase
         .from('purchase_orders')
@@ -118,7 +121,7 @@ export const EditPurchaseOrderDialog = ({ open, onOpenChange, order }: EditPurch
 
       if (error) throw error;
 
-      // If order is being received, update product inventory
+      // If order is being received, update product inventory (add stock)
       if (isBeingReceived) {
         const product = products?.find(p => p.id === parseInt(formData.productId));
         if (product) {
@@ -156,6 +159,47 @@ export const EditPurchaseOrderDialog = ({ open, onOpenChange, order }: EditPurch
           if (movementError) throw movementError;
 
           toast.success(`Inventory updated! Added ${quantity} units to ${product.name}`);
+        }
+      }
+      
+      // If order is being un-received (reversed), subtract the stock
+      if (isBeingUnreceived) {
+        const product = products?.find(p => p.id === parseInt(formData.productId));
+        if (product) {
+          // Get current product quantity
+          const { data: currentProduct, error: fetchError } = await supabase
+            .from('products')
+            .select('quantity')
+            .eq('id', parseInt(formData.productId))
+            .single();
+
+          if (fetchError) throw fetchError;
+
+          const newQuantity = Math.max(0, (currentProduct?.quantity || 0) - order.quantity);
+
+          // Update product quantity
+          const { error: updateError } = await supabase
+            .from('products')
+            .update({ 
+              quantity: newQuantity,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', parseInt(formData.productId));
+
+          if (updateError) throw updateError;
+
+          // Record the movement (negative)
+          const { error: movementError } = await supabase
+            .from('movements')
+            .insert({
+              product_id: parseInt(formData.productId),
+              qty_change: -order.quantity,
+              reason: `Purchase Order #${order.id} status reversed from received (${formData.store})`,
+            });
+
+          if (movementError) throw movementError;
+
+          toast.info(`Inventory adjusted. Removed ${order.quantity} units from ${product.name}`);
         }
       }
       
