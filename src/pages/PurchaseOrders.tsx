@@ -52,28 +52,8 @@ const PurchaseOrders = () => {
     }
   });
 
-  // Group orders by invoice number
-  const groupedOrders = orders?.reduce((acc, order) => {
-    const invoiceNum = order.invoice_number || `#${order.id}`;
-    if (!acc[invoiceNum]) {
-      acc[invoiceNum] = {
-        invoiceNumber: invoiceNum,
-        orders: [],
-        supplier: order.suppliers,
-        expectedDeliveryDate: order.expected_delivery_date,
-        status: order.status,
-        notes: order.notes,
-        createdAt: order.created_at,
-      };
-    }
-    acc[invoiceNum].orders.push(order);
-    return acc;
-  }, {} as Record<string, any>);
-
-  const invoiceList = groupedOrders ? Object.values(groupedOrders) : [];
-
-  const filteredInvoices = invoiceList.filter(invoice => 
-    activeStore === 'All' || invoice.orders.some((o: any) => o.store === activeStore)
+  const filteredOrders = orders?.filter(order => 
+    activeStore === 'All' || order.store === activeStore
   );
 
   const handleEdit = (order: any) => {
@@ -193,7 +173,7 @@ const PurchaseOrders = () => {
 
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
-            ) : !filteredInvoices || filteredInvoices.length === 0 ? (
+            ) : !filteredOrders || filteredOrders.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
@@ -203,10 +183,12 @@ const PurchaseOrders = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Invoice #</TableHead>
-                      <TableHead>Products</TableHead>
-                      <TableHead>Stores</TableHead>
+                      <TableHead>Store</TableHead>
+                      <TableHead>Product</TableHead>
+                      <TableHead>SKU</TableHead>
                       <TableHead>Supplier</TableHead>
-                      <TableHead>Total Qty</TableHead>
+                      <TableHead>Contact</TableHead>
+                      <TableHead>Quantity</TableHead>
                       <TableHead>Expected Delivery</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Notes</TableHead>
@@ -214,86 +196,77 @@ const PurchaseOrders = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredInvoices.map((invoice: any) => {
-                      const totalQty = invoice.orders.reduce((sum: number, o: any) => sum + o.quantity, 0);
-                      const productNames = invoice.orders.map((o: any) => o.products?.name || 'N/A').join(', ');
-                      const storeSet = [...new Set(invoice.orders.map((o: any) => o.store))];
-                      
-                      return (
-                        <TableRow key={invoice.invoiceNumber}>
-                          <TableCell className="font-medium">
+                    {filteredOrders.map((order: any) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
+                            onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
+                          >
+                            <FileText className="h-3 w-3 text-muted-foreground" />
+                            {order.invoice_number || `#${order.id}`}
+                          </Button>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStoreColor(order.store)}>
+                            {order.store || 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{order.products?.name || 'N/A'}</TableCell>
+                        <TableCell className="text-muted-foreground">{order.products?.sku || 'N/A'}</TableCell>
+                        <TableCell>{order.suppliers?.name || 'N/A'}</TableCell>
+                        <TableCell className="text-sm">
+                          {order.suppliers?.contact_email && (
+                            <div>{order.suppliers.contact_email}</div>
+                          )}
+                          {order.suppliers?.contact_phone && (
+                            <div className="text-muted-foreground">{order.suppliers.contact_phone}</div>
+                          )}
+                        </TableCell>
+                        <TableCell>{order.quantity}</TableCell>
+                        <TableCell>
+                          {format(new Date(order.expected_delivery_date), 'MMM dd, yyyy')}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
+                          {order.notes || '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
                             <Button
                               variant="ghost"
-                              size="sm"
-                              className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
-                              onClick={() => handleViewInvoice(invoice.invoiceNumber)}
+                              size="icon"
+                              onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
+                              title="View Invoice"
                             >
-                              <FileText className="h-3 w-3 text-muted-foreground" />
-                              {invoice.invoiceNumber}
+                              <Eye className="h-4 w-4" />
                             </Button>
-                          </TableCell>
-                          <TableCell>
-                            <div className="max-w-xs">
-                              {invoice.orders.length === 1 ? (
-                                <span>{invoice.orders[0].products?.name || 'N/A'}</span>
-                              ) : (
-                                <span className="text-sm">{invoice.orders.length} products</span>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {storeSet.map((store: string) => (
-                                <Badge key={store} variant={getStoreColor(store)}>
-                                  {store || 'N/A'}
-                                </Badge>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell>{invoice.supplier?.name || 'N/A'}</TableCell>
-                          <TableCell>{totalQty}</TableCell>
-                          <TableCell>
-                            {format(new Date(invoice.expectedDeliveryDate), 'MMM dd, yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getStatusColor(invoice.status)}>
-                              {invoice.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                            {invoice.notes || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewInvoice(invoice.invoiceNumber)}
-                                title="View Invoice"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(invoice.orders[0])}
-                                title="Edit"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteClick(invoice.orders[0])}
-                                title="Delete"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEdit(order)}
+                              title="Edit"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteClick(order)}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
