@@ -51,19 +51,20 @@ const Inventory = () => {
             <Button
               onClick={() => toggleStore(store.id)}
               className={cn(
-                "w-full h-20 justify-between transition-all shadow-custom-md hover:shadow-custom-lg px-6",
+                "w-full h-14 text-lg font-semibold justify-between transition-all shadow-sm hover:shadow-md px-4",
                 activeStore === store.id 
                   ? "bg-card text-foreground border-2 border-primary" 
                   : "bg-card text-foreground border border-border hover:bg-muted"
               )}
               variant="outline"
             >
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <img 
                   src={store.logo} 
                   alt={store.name} 
-                  className="h-12 w-auto max-w-[140px] object-contain"
+                  className="h-6 w-6 object-contain"
                 />
+                <span>{store.name}</span>
               </div>
               {activeStore === store.id ? (
                 <ChevronUp className="w-5 h-5" />
