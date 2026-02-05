@@ -55,16 +55,16 @@ All colors MUST be HSL.
     --warning: 40 90% 55%;
     --info: 210 75% 55%;
 
-    /* Dark Teal Green Sidebar */
-    --sidebar-background: 160 25% 18%;
-    --sidebar-foreground: 45 30% 95%;
-    --sidebar-primary: 45 85% 55%;
-    --sidebar-primary-foreground: 160 25% 15%;
-    --sidebar-accent: 160 20% 25%;
-    --sidebar-accent-foreground: 45 85% 55%;
-    --sidebar-border: 160 20% 22%;
-    --sidebar-ring: 45 85% 55%;
-    --sidebar-muted: 160 15% 40%;
+    /* Warm Brown Sidebar */
+    --sidebar-background: 30 25% 35%;
+    --sidebar-foreground: 35 25% 96%;
+    --sidebar-primary: 35 25% 96%;
+    --sidebar-primary-foreground: 30 25% 35%;
+    --sidebar-accent: 30 20% 42%;
+    --sidebar-accent-foreground: 35 25% 96%;
+    --sidebar-border: 30 20% 30%;
+    --sidebar-ring: 35 25% 96%;
+    --sidebar-muted: 35 15% 70%;
 
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(30 15% 20% / 0.05);
@@ -105,16 +105,16 @@ All colors MUST be HSL.
     --input: 30 15% 25%;
     --ring: 35 25% 70%;
     
-    /* Dark Teal Green Sidebar (dark mode) */
-    --sidebar-background: 160 30% 12%;
-    --sidebar-foreground: 45 30% 95%;
-    --sidebar-primary: 45 85% 55%;
-    --sidebar-primary-foreground: 160 25% 10%;
-    --sidebar-accent: 160 25% 18%;
-    --sidebar-accent-foreground: 45 85% 55%;
-    --sidebar-border: 160 20% 15%;
-    --sidebar-ring: 45 85% 55%;
-    --sidebar-muted: 160 15% 35%;
+    /* Warm Brown Sidebar (dark mode) */
+    --sidebar-background: 30 25% 28%;
+    --sidebar-foreground: 35 25% 96%;
+    --sidebar-primary: 35 25% 96%;
+    --sidebar-primary-foreground: 30 25% 28%;
+    --sidebar-accent: 30 20% 35%;
+    --sidebar-accent-foreground: 35 25% 96%;
+    --sidebar-border: 30 20% 22%;
+    --sidebar-ring: 35 25% 96%;
+    --sidebar-muted: 35 15% 65%;
   }
 }
 
