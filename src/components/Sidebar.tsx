@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, TrendingUp, Lightbulb, BarChart3, User, ShoppingCart } from "lucide-react";
+import { LayoutDashboard, Package, TrendingUp, Lightbulb, BarChart3, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "react-router-dom";
 import logo from "@/assets/the-camp-logo.jpg";
@@ -11,7 +11,6 @@ const navigation = [
   { name: "SMART INSIGHTS", href: "/insights", icon: Lightbulb },
   { name: "PURCHASE ORDERS", href: "/purchase-orders", icon: ShoppingCart },
   { name: "REPORTS", href: "/reports", icon: BarChart3 },
-  { name: "ACCOUNT", href: "/account", icon: User },
 ];
 
 export const Sidebar = () => {
@@ -38,8 +37,11 @@ export const Sidebar = () => {
         <img src={logo} alt="The Camp" className="w-full h-auto rounded-lg" />
       </div>
 
-      {/* User Profile Section */}
-      <div className="px-6 py-8 flex flex-col items-center">
+      {/* User Profile Section - Links to Account */}
+      <Link 
+        to="/account" 
+        className="px-6 py-8 flex flex-col items-center hover:bg-sidebar-accent/30 transition-colors cursor-pointer"
+      >
         <div className="w-24 h-24 rounded-full bg-sidebar-accent border-4 border-sidebar-primary flex items-center justify-center mb-4">
           <span className="text-3xl font-bold text-sidebar-foreground">
             {getInitials(user?.email || "")}
@@ -51,7 +53,7 @@ export const Sidebar = () => {
         <p className="text-sm text-sidebar-muted">
           {user?.email || "user@example.com"}
         </p>
-      </div>
+      </Link>
       
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4">
