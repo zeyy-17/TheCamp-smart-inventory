@@ -62,7 +62,7 @@ const Inventory = () => {
                 <img 
                   src={store.logo} 
                   alt={store.name} 
-                  className="h-6 w-6 object-contain"
+                  className="h-8 w-8 object-contain"
                 />
                 <span>{store.name}</span>
               </div>
