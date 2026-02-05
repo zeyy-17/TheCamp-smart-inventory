@@ -1,14 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Store, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import InventorySection from "@/components/InventorySection";
 import { cn } from "@/lib/utils";
+import ampersandLogo from "@/assets/ampersand-logo.png";
+import hardinLogo from "@/assets/hardin-logo.png";
+import herexLogo from "@/assets/herex-logo.png";
 
 const stores = [
-  { id: "ampersand", name: "Ampersand", color: "bg-blue-500" },
-  { id: "herex", name: "hereX", color: "bg-emerald-500" },
-  { id: "hardin", name: "Hardin", color: "bg-amber-500" },
+  { id: "ampersand", name: "Ampersand", logo: ampersandLogo },
+  { id: "herex", name: "hereX", logo: herexLogo },
+  { id: "hardin", name: "Hardin", logo: hardinLogo },
 ];
 
 const Inventory = () => {
@@ -48,16 +51,19 @@ const Inventory = () => {
             <Button
               onClick={() => toggleStore(store.id)}
               className={cn(
-                "w-full h-16 text-lg font-semibold justify-between transition-all shadow-custom-md hover:shadow-custom-lg",
+                "w-full h-20 justify-between transition-all shadow-custom-md hover:shadow-custom-lg px-6",
                 activeStore === store.id 
-                  ? `${store.color} text-white hover:opacity-90` 
+                  ? "bg-card text-foreground border-2 border-primary" 
                   : "bg-card text-foreground border border-border hover:bg-muted"
               )}
-              variant={activeStore === store.id ? "default" : "outline"}
+              variant="outline"
             >
-              <div className="flex items-center gap-3">
-                <Store className="w-6 h-6" />
-                <span>{store.name}</span>
+              <div className="flex items-center gap-4">
+                <img 
+                  src={store.logo} 
+                  alt={store.name} 
+                  className="h-12 w-auto max-w-[140px] object-contain"
+                />
               </div>
               {activeStore === store.id ? (
                 <ChevronUp className="w-5 h-5" />
