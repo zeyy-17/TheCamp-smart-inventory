@@ -1,8 +1,9 @@
 import { DashboardCard } from "@/components/DashboardCard";
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { TopProductsTable } from "@/components/TopProductsTable";
-import { InventoryAlerts } from "@/components/InventoryAlerts";
-import { Package, DollarSign, AlertTriangle } from "lucide-react";
+import { OutOfStockAlertCard } from "@/components/OutOfStockAlertCard";
+import { LowStockAlertCard } from "@/components/LowStockAlertCard";
+import { Package, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
 import { useState } from "react";
@@ -25,18 +26,6 @@ const Dashboard = () => {
     },
   });
 
-  // Fetch low stock alerts count
-  const { data: lowStockCount } = useQuery({
-    queryKey: ['low-stock-count'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('quantity, reorder_level');
-      
-      const lowStock = data?.filter(p => p.quantity !== null && p.reorder_level !== null && p.quantity <= p.reorder_level) || [];
-      return lowStock.length;
-    },
-  });
 
   // Fetch weekly sales total
   const { data: weeklySales } = useQuery({
@@ -74,18 +63,6 @@ const Dashboard = () => {
     navigate("/inventory");
   };
 
-  const handleStockAlert = () => {
-    navigate("/inventory?filter=low-stock");
-  };
-
-  const handleOutOfStock = () => {
-    navigate("/inventory?filter=out-of-stock");
-  };
-
-  const handleViewForecast = () => {
-    navigate("/forecast");
-  };
-
   // Calculate sales trend
   const salesTrend = previousWeeklySales && weeklySales 
     ? Math.round(((weeklySales - previousWeeklySales) / previousWeeklySales) * 100)
@@ -102,25 +79,20 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Inventory Alerts */}
-        <InventoryAlerts />
+        {/* Alert Cards - Top Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <OutOfStockAlertCard />
+          <LowStockAlertCard />
+        </div>
 
-        {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Metric Cards - Bottom Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DashboardCard
             title="Total Products"
             value={productsCount?.toString() || "0"}
             subtitle="Active items"
             icon={Package}
             onClick={handleReorderOpportunity}
-          />
-          <DashboardCard
-            title="Low Stock Alerts"
-            value={lowStockCount?.toString() || "0"}
-            subtitle="Require attention"
-            icon={AlertTriangle}
-            onClick={handleStockAlert}
-            variant="warning"
           />
           <DashboardCard
             title="Weekly Sales"
