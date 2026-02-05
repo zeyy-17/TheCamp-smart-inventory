@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
+import { ChangeStatusDialog } from '@/components/ChangeStatusDialog';
 import { Plus, Package, Pencil, Trash2, FileText, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -34,6 +35,8 @@ const PurchaseOrders = () => {
   const [activeStore, setActiveStore] = useState('All');
   const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedStatusGroup, setSelectedStatusGroup] = useState<any>(null);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -275,7 +278,18 @@ const PurchaseOrders = () => {
                             {format(new Date(group.expectedDeliveryDate), 'MMM dd, yyyy')}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getStatusColor(group.status)}>
+                            <Badge 
+                              variant={getStatusColor(group.status)}
+                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => {
+                                setSelectedStatusGroup({
+                                  invoiceNumber: group.invoiceNumber,
+                                  status: group.status,
+                                  orders: group.orders,
+                                });
+                                setStatusDialogOpen(true);
+                              }}
+                            >
                               {group.status}
                             </Badge>
                           </TableCell>
@@ -353,22 +367,26 @@ const PurchaseOrders = () => {
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEdit(order)}
-                                title="Edit"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteClick(order)}
-                                title="Delete"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              {order.status === 'pending' && (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleEdit(order)}
+                                    title="Edit"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDeleteClick(order)}
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -407,6 +425,16 @@ const PurchaseOrders = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {selectedStatusGroup && (
+          <ChangeStatusDialog
+            open={statusDialogOpen}
+            onOpenChange={setStatusDialogOpen}
+            invoiceNumber={selectedStatusGroup.invoiceNumber}
+            currentStatus={selectedStatusGroup.status}
+            orders={selectedStatusGroup.orders}
+          />
+        )}
 
         {selectedInvoice && getInvoiceData() && (
           <PurchaseOrderInvoice
