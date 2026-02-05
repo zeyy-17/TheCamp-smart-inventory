@@ -4,11 +4,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useState, useEffect } from "react";
-import { BrainCircuit, Sparkles, TrendingUp, Zap, Database, Store, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { BrainCircuit, Sparkles, TrendingUp, Zap, Database, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-
+import ampersandLogo from "@/assets/ampersand-logo.png";
+import herexLogo from "@/assets/herex-logo.png";
+import hardinLogo from "@/assets/hardin-logo.png";
 type ForecastData = {
   period: string;
   actual: number;
@@ -30,6 +32,12 @@ type StoreForecast = {
   monthlyForecast: ForecastData[];
   insights: InsightsData;
 };
+
+const storeData = [
+  { id: "Ampersand", name: "Ampersand", logo: ampersandLogo },
+  { id: "hereX", name: "hereX", logo: herexLogo },
+  { id: "Hardin", name: "Hardin", logo: hardinLogo },
+] as const;
 
 const stores = ["Ampersand", "hereX", "Hardin"] as const;
 type StoreType = typeof stores[number];
@@ -188,7 +196,7 @@ const Forecast = () => {
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2">
-              <Store className="w-5 h-5 text-primary" />
+              <img src={storeData.find(s => s.id === selectedStore)?.logo} alt="" className="w-5 h-5 object-contain" />
               <CardTitle className="text-lg">Select Store</CardTitle>
             </div>
             <CardDescription>View and generate forecasts for each store location</CardDescription>
@@ -196,11 +204,11 @@ const Forecast = () => {
           <CardContent>
             <Tabs value={selectedStore} onValueChange={(v) => setSelectedStore(v as StoreType)}>
               <TabsList className="grid w-full grid-cols-3">
-                {stores.map((store) => (
-                  <TabsTrigger key={store} value={store} className="gap-2">
-                    <Store className="w-4 h-4" />
-                    {store}
-                    {forecastData[store] && (
+                {storeData.map((store) => (
+                  <TabsTrigger key={store.id} value={store.id} className="gap-2">
+                    <img src={store.logo} alt={store.name} className="w-5 h-5 object-contain" />
+                    {store.name}
+                    {forecastData[store.id as StoreType] && (
                       <Badge variant="outline" className="ml-1 text-xs">
                         <Sparkles className="w-2 h-2 mr-1" />
                         AI
