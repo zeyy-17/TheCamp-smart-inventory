@@ -1,31 +1,70 @@
 
 
-## Remove Scheduled Reports Section from Reports Page
+## Dashboard Layout Redesign
 
-### Overview
-Remove the "Scheduled Reports" section from the Reports page as requested. This is a straightforward UI cleanup task.
+Based on your wireframe, I'll reorganize the top section of the dashboard into a 2x2 grid layout with the alert cards on top and the metric cards on the bottom.
 
-### Changes Required
+### New Layout Structure
 
-**File: `src/pages/Reports.tsx`**
+```text
++------------------------+------------------------+
+|                        |                        |
+|   Out of Stock Alert   |    Low Stock Alert     |
+|      (tall card)       |      (tall card)       |
+|                        |                        |
++------------------------+------------------------+
+|                        |                        |
+|    Total Products      |     Weekly Sales       |
+|     (small card)       |     (small card)       |
+|                        |                        |
++------------------------+------------------------+
+```
 
-Remove the following section (lines 204-222):
-- The "Scheduled Reports" card containing:
-  - "Weekly Inventory Summary" scheduled item (Every Monday at 9:00 AM)
-  - "Monthly Performance Report" scheduled item (First day of each month at 8:00 AM)
-  - Both "Edit Schedule" buttons
+### Changes to Make
 
-### What Will Remain
-- Header with page title and description
-- Summary Cards (Today's Sales, Pending Orders, Received This Week)
-- Today's Transactions list
-- Pending Purchase Orders list
-- Recent Purchase Orders (Last 7 Days) list
-- Report Cards (Weekly Inventory Report, Monthly Sales Analysis) with Download/Regenerate buttons
-- ReportSummaryDialog component
+**1. Create New Alert Card Components**
+
+I'll create two new dedicated card components for the alerts that match the dashboard card styling:
+- **OutOfStockAlertCard**: Displays out of stock count with product list
+- **LowStockAlertCard**: Displays low stock count with product list
+
+These will be taller cards with more visual prominence, showing:
+- Large count number at the top
+- List of affected products (up to 5)
+- "View All" button to navigate to inventory
+
+**2. Update Dashboard Layout**
+
+Reorganize the Dashboard.tsx layout:
+- Remove the separate `<InventoryAlerts />` component from its current position
+- Create a 2-column grid for the top row (Out of Stock | Low Stock)
+- Create a 2-column grid for the bottom row (Total Products | Weekly Sales)
+- Remove the "Low Stock Alerts" from the old 3-column KPI section since it's now in the top row
+
+**3. Styling Updates**
+
+- Top row alert cards will be taller with consistent styling matching the DashboardCard component
+- Use red/destructive theme for Out of Stock
+- Use amber/warning theme for Low Stock
+- Bottom row uses the existing DashboardCard component for Total Products and Weekly Sales
+
+---
 
 ### Technical Details
-- No database changes required
-- No other components affected
-- Simple removal of JSX block
+
+**Files to Modify:**
+- `src/pages/Dashboard.tsx` - Restructure the layout grid and component placement
+- `src/components/InventoryAlerts.tsx` - Refactor into two separate card-style components
+
+**Grid Structure (CSS):**
+```text
+Top Row:    grid-cols-1 md:grid-cols-2 (2 equal columns)
+Bottom Row: grid-cols-1 md:grid-cols-2 (2 equal columns)
+```
+
+**Data Sources (unchanged):**
+- Out of Stock: Products where quantity = 0
+- Low Stock: Products where quantity <= reorder_level and > 0
+- Total Products: Count of all products
+- Weekly Sales: Sum of sales from last 7 days
 
