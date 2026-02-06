@@ -180,7 +180,7 @@ const Forecast = () => {
               </Badge>
             </div>
             <p className="text-muted-foreground">
-              Machine learning predictions with real-time store analytics
+              Gemini AI predictions based on your sales data
             </p>
           </div>
           <div className="flex gap-2">
@@ -234,9 +234,9 @@ const Forecast = () => {
                 Live Model
               </Badge>
             </div>
-            <CardDescription>
-              Powered by time-series analysis and neural networks for {selectedStore}
-            </CardDescription>
+             <CardDescription>
+               Powered by Gemini AI analysis of your sales history for {selectedStore}
+             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -280,7 +280,7 @@ const Forecast = () => {
                     {modelAccuracy}% Confidence
                   </Badge>
                 </div>
-                <Badge variant="secondary">AI Model: ARIMA</Badge>
+                <Badge variant="secondary">Gemini AI</Badge>
               </div>
               <ResponsiveContainer width="100%" height={400}>
                 <LineChart data={processedSales.daily}>
@@ -323,7 +323,7 @@ const Forecast = () => {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-sm text-muted-foreground">Average Daily Sales</p>
-                    <Badge variant="outline" className="text-xs">ML</Badge>
+                    <Badge variant="outline" className="text-xs">AI</Badge>
                   </div>
                   <p className="text-2xl font-bold text-foreground">₱{avgDailySales.toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground mt-1">{selectedStore}</p>
@@ -365,10 +365,10 @@ const Forecast = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-foreground">Weekly Sales - {selectedStore}</h3>
-                  <Badge variant="outline" className="text-xs">
-                    <BrainCircuit className="w-3 h-3 mr-1" />
-                    Neural Network
-                  </Badge>
+                   <Badge variant="outline" className="text-xs">
+                     <BrainCircuit className="w-3 h-3 mr-1" />
+                     Gemini AI
+                   </Badge>
                 </div>
                 <Badge variant="secondary">Seasonality: Detected</Badge>
               </div>
@@ -436,10 +436,10 @@ const Forecast = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-semibold text-foreground">Monthly Sales - {selectedStore}</h3>
-                  <Badge variant="outline" className="text-xs">
-                    <Database className="w-3 h-3 mr-1" />
-                    Time-Series Model
-                  </Badge>
+                   <Badge variant="outline" className="text-xs">
+                     <Database className="w-3 h-3 mr-1" />
+                     Gemini AI
+                   </Badge>
                 </div>
                 <Badge variant="secondary" className="gap-1">
                   <Sparkles className="w-3 h-3" />
@@ -493,7 +493,7 @@ const Forecast = () => {
               <div className="bg-card rounded-lg p-4 border border-border">
                 <p className="text-sm text-muted-foreground">Forecast Accuracy</p>
                 <p className="text-2xl font-bold text-foreground mt-1">{modelAccuracy}%</p>
-                <p className="text-xs text-green-600 mt-1">Time-series model</p>
+                <p className="text-xs text-green-600 mt-1">Gemini AI prediction</p>
               </div>
               <div className="bg-card rounded-lg p-4 border border-border">
                 <p className="text-sm text-muted-foreground">Next Month Projection</p>
