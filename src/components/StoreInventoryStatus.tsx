@@ -16,18 +16,25 @@ const stores = [
 export const StoreInventoryStatus = () => {
   const navigate = useNavigate();
 
-  const { data: products = [] } = useQuery({
-    queryKey: ['products-stock-status'],
+  const { data: storeProducts = {} } = useQuery({
+    queryKey: ['products-stock-status-by-store'],
     queryFn: async () => {
       const { data } = await supabase
         .from('products')
-        .select('id, name, quantity, reorder_level');
-      return data || [];
+        .select('id, name, quantity, reorder_level, store');
+      const result: Record<string, { outOfStock: number; lowStock: number }> = {};
+      for (const store of stores) {
+        const storeItems = (data || []).filter(p => 
+          p.store?.toLowerCase() === store.name.toLowerCase()
+        );
+        result[store.id] = {
+          outOfStock: storeItems.filter(p => p.quantity === 0).length,
+          lowStock: storeItems.filter(p => (p.quantity ?? 0) > 0 && (p.quantity ?? 0) <= (p.reorder_level ?? 0)).length,
+        };
+      }
+      return result;
     },
   });
-
-  const outOfStock = products.filter(p => p.quantity === 0);
-  const lowStock = products.filter(p => (p.quantity ?? 0) > 0 && (p.quantity ?? 0) <= (p.reorder_level ?? 0));
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
