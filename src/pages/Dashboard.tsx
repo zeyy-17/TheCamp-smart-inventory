@@ -78,11 +78,6 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Alert Cards - Top Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <OutOfStockAlertCard />
-          <LowStockAlertCard />
-        </div>
 
         {/* Store Inventory Status */}
         <div>
