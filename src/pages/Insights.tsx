@@ -25,6 +25,7 @@ type FilterType = "all" | "active" | "opportunities" | "critical" | "accuracy";
 
 const Insights = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [salesChartOpen, setSalesChartOpen] = useState(false);
