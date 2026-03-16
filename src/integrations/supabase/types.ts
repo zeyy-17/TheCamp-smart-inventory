@@ -75,6 +75,7 @@ export type Database = {
           reorder_level: number | null
           retail_price: number
           sku: string
+          store: string | null
           supplier_id: number | null
           updated_at: string | null
         }
@@ -88,6 +89,7 @@ export type Database = {
           reorder_level?: number | null
           retail_price: number
           sku: string
+          store?: string | null
           supplier_id?: number | null
           updated_at?: string | null
         }
@@ -101,6 +103,7 @@ export type Database = {
           reorder_level?: number | null
           retail_price?: number
           sku?: string
+          store?: string | null
           supplier_id?: number | null
           updated_at?: string | null
         }
