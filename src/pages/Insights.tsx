@@ -9,7 +9,7 @@ import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialo
 import { AIPromotionDialog } from "@/components/AIPromotionDialog";
 import { SalesChartDialog } from "@/components/SalesChartDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Insight {
   type: "warning" | "opportunity" | "stock" | "revenue";
