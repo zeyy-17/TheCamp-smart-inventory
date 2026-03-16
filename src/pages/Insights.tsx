@@ -251,7 +251,7 @@ const Insights = () => {
       return sum;
     }, 0);
 
-  const isLoading = productsLoading || salesLoading;
+  const isLoading = productsLoading || salesLoading || aiLoading;
 
   const getSectionTitle = () => {
     switch (activeFilter) {
