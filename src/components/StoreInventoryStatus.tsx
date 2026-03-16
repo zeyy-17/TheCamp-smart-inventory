@@ -35,7 +35,7 @@ export const StoreInventoryStatus = () => {
         <Card
           key={store.id}
           className="cursor-pointer hover:shadow-custom-lg transition-all duration-300 border-border"
-          onClick={() => navigate(`/inventory?store=${store.id}`)}
+          onClick={() => navigate('/inventory')}
         >
           <CardContent className="p-5">
             <div className="flex items-center gap-3 mb-4">
