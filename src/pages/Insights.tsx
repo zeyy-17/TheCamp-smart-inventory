@@ -57,12 +57,34 @@ const Insights = () => {
     },
   });
 
+  // Fetch AI-generated opportunity insights
+  const { data: aiInsights = [], isLoading: aiLoading, isFetching: aiFetching } = useQuery({
+    queryKey: ['ai-opportunity-insights'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-insights');
+      if (error) {
+        console.error('AI insights error:', error);
+        toast.error('Failed to generate AI predictions');
+        return [];
+      }
+      if (data?.error) {
+        toast.error(data.error);
+        return [];
+      }
+      return (data?.insights || []).map((i: any) => ({
+        ...i,
+        category: "opportunity" as const,
+      }));
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   // Generate insights based on real data
   useEffect(() => {
     if (products.length > 0 || sales.length > 0) {
       generateInsights();
     }
-  }, [products, sales]);
+  }, [products, sales, aiInsights]);
 
   const generateInsights = () => {
     const insights: Insight[] = [];
