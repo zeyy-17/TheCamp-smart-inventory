@@ -1,8 +1,6 @@
 import { DashboardCard } from "@/components/DashboardCard";
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { TopProductsTable } from "@/components/TopProductsTable";
-import { OutOfStockAlertCard } from "@/components/OutOfStockAlertCard";
-import { LowStockAlertCard } from "@/components/LowStockAlertCard";
 import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
 import { Package, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -80,11 +78,7 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Alert Cards - Top Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <OutOfStockAlertCard />
-          <LowStockAlertCard />
-        </div>
+        {/* Store Inventory Status */}
 
         {/* Store Inventory Status */}
         <div>
