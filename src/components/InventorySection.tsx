@@ -211,12 +211,6 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
             {products.filter((item: any) => item.quantity === 0).length}
           </div>
         </Button>
-        <div className="bg-card p-4 rounded-xl shadow-custom-md border border-border">
-          <div className="text-sm text-muted-foreground mb-1">Total Value</div>
-          <div className="text-2xl font-bold text-foreground">
-            ₱{products.reduce((sum: number, item: any) => sum + (item.retail_price * item.quantity), 0).toLocaleString()}
-          </div>
-        </div>
       </div>
 
       {/* Filters */}
