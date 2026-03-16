@@ -19,9 +19,13 @@ const Inventory = () => {
   const [activeStore, setActiveStore] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
-  // Handle URL filter parameter
+  // Handle URL parameters for store and filter
   useEffect(() => {
+    const store = searchParams.get('store');
     const filter = searchParams.get('filter');
+    if (store) {
+      setActiveStore(store);
+    }
     if (filter) {
       setStatusFilter(filter);
     }
