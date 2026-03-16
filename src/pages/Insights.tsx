@@ -9,7 +9,7 @@ import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialo
 import { AIPromotionDialog } from "@/components/AIPromotionDialog";
 import { SalesChartDialog } from "@/components/SalesChartDialog";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Insight {
   type: "warning" | "opportunity" | "stock" | "revenue";
@@ -25,6 +25,7 @@ type FilterType = "all" | "active" | "opportunities" | "critical" | "accuracy";
 
 const Insights = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [salesChartOpen, setSalesChartOpen] = useState(false);
@@ -56,12 +57,34 @@ const Insights = () => {
     },
   });
 
+  // Fetch AI-generated opportunity insights
+  const { data: aiInsights = [], isLoading: aiLoading, isFetching: aiFetching } = useQuery({
+    queryKey: ['ai-opportunity-insights'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-insights');
+      if (error) {
+        console.error('AI insights error:', error);
+        toast.error('Failed to generate AI predictions');
+        return [];
+      }
+      if (data?.error) {
+        toast.error(data.error);
+        return [];
+      }
+      return (data?.insights || []).map((i: any) => ({
+        ...i,
+        category: "opportunity" as const,
+      }));
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
   // Generate insights based on real data
   useEffect(() => {
     if (products.length > 0 || sales.length > 0) {
       generateInsights();
     }
-  }, [products, sales]);
+  }, [products, sales, aiInsights]);
 
   const generateInsights = () => {
     const insights: Insight[] = [];
@@ -96,57 +119,10 @@ const Insights = () => {
       });
     });
 
-    // Opportunity Insights - High margin products, trending items
-    const highMarginProducts = products
-      .filter((p: any) => p.retail_price && p.cost_price)
-      .map((p: any) => ({
-        ...p,
-        margin: ((p.retail_price - p.cost_price) / p.retail_price) * 100
-      }))
-      .filter((p: any) => p.margin > 40)
-      .slice(0, 3);
-
-    highMarginProducts.forEach((product: any) => {
-      insights.push({
-        type: "opportunity",
-        title: `High Margin Opportunity: ${product.name}`,
-        description: `${product.name} has a ${product.margin.toFixed(1)}% profit margin. Consider promoting this product to increase revenue.`,
-        action: "Plan Promotion",
-        category: "opportunity",
-        productName: product.name,
-        productId: product.id
-      });
+    // Opportunity Insights - from Gemini AI predictions
+    aiInsights.forEach((insight: Insight) => {
+      insights.push(insight);
     });
-
-    // Sales-based opportunities
-    if (sales.length > 0) {
-      const productSales: Record<number, number> = {};
-      sales.forEach((sale: any) => {
-        if (sale.product_id) {
-          productSales[sale.product_id] = (productSales[sale.product_id] || 0) + sale.quantity;
-        }
-      });
-
-      const topSellingIds = Object.entries(productSales)
-        .sort(([, a], [, b]) => (b as number) - (a as number))
-        .slice(0, 2)
-        .map(([id]) => parseInt(id));
-
-      topSellingIds.forEach(productId => {
-        const product = products.find((p: any) => p.id === productId);
-        if (product) {
-          insights.push({
-            type: "revenue",
-            title: `Top Seller: ${product.name}`,
-            description: `${product.name} is one of your best-selling products with ${productSales[productId]} units sold. Consider bundling or upselling.`,
-            action: "View Sales",
-            category: "opportunity",
-            productName: product.name,
-            productId: product.id
-          });
-        }
-      });
-    }
 
     // Active Insights - General actionable items
     const productsNeedingReview = products.filter((p: any) => 
@@ -275,7 +251,7 @@ const Insights = () => {
       return sum;
     }, 0);
 
-  const isLoading = productsLoading || salesLoading;
+  const isLoading = productsLoading || salesLoading || aiLoading;
 
   const getSectionTitle = () => {
     switch (activeFilter) {
@@ -305,11 +281,14 @@ const Insights = () => {
             </p>
           </div>
           <button
-            onClick={generateInsights}
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ['ai-opportunity-insights'] });
+              generateInsights();
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-            disabled={isLoading}
+            disabled={isLoading || aiFetching}
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading || aiFetching ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
