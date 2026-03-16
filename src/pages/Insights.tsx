@@ -119,57 +119,10 @@ const Insights = () => {
       });
     });
 
-    // Opportunity Insights - High margin products, trending items
-    const highMarginProducts = products
-      .filter((p: any) => p.retail_price && p.cost_price)
-      .map((p: any) => ({
-        ...p,
-        margin: ((p.retail_price - p.cost_price) / p.retail_price) * 100
-      }))
-      .filter((p: any) => p.margin > 40)
-      .slice(0, 3);
-
-    highMarginProducts.forEach((product: any) => {
-      insights.push({
-        type: "opportunity",
-        title: `High Margin Opportunity: ${product.name}`,
-        description: `${product.name} has a ${product.margin.toFixed(1)}% profit margin. Consider promoting this product to increase revenue.`,
-        action: "Plan Promotion",
-        category: "opportunity",
-        productName: product.name,
-        productId: product.id
-      });
+    // Opportunity Insights - from Gemini AI predictions
+    aiInsights.forEach((insight: Insight) => {
+      insights.push(insight);
     });
-
-    // Sales-based opportunities
-    if (sales.length > 0) {
-      const productSales: Record<number, number> = {};
-      sales.forEach((sale: any) => {
-        if (sale.product_id) {
-          productSales[sale.product_id] = (productSales[sale.product_id] || 0) + sale.quantity;
-        }
-      });
-
-      const topSellingIds = Object.entries(productSales)
-        .sort(([, a], [, b]) => (b as number) - (a as number))
-        .slice(0, 2)
-        .map(([id]) => parseInt(id));
-
-      topSellingIds.forEach(productId => {
-        const product = products.find((p: any) => p.id === productId);
-        if (product) {
-          insights.push({
-            type: "revenue",
-            title: `Top Seller: ${product.name}`,
-            description: `${product.name} is one of your best-selling products with ${productSales[productId]} units sold. Consider bundling or upselling.`,
-            action: "View Sales",
-            category: "opportunity",
-            productName: product.name,
-            productId: product.id
-          });
-        }
-      });
-    }
 
     // Active Insights - General actionable items
     const productsNeedingReview = products.filter((p: any) => 
