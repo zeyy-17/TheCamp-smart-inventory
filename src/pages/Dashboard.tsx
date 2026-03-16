@@ -26,8 +26,7 @@ const Dashboard = () => {
       return count || 0;
     },
   });
-
-
+import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
   // Fetch weekly sales total
   const { data: weeklySales } = useQuery({
     queryKey: ['weekly-sales'],
