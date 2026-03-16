@@ -86,6 +86,12 @@ const Dashboard = () => {
           <LowStockAlertCard />
         </div>
 
+        {/* Store Inventory Status */}
+        <div>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Store Inventory Status</h2>
+          <StoreInventoryStatus />
+        </div>
+
         {/* Metric Cards - Bottom Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DashboardCard
