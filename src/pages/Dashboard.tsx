@@ -3,7 +3,7 @@ import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { TopProductsTable } from "@/components/TopProductsTable";
 import { OutOfStockAlertCard } from "@/components/OutOfStockAlertCard";
 import { LowStockAlertCard } from "@/components/LowStockAlertCard";
-
+import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
 import { Package, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
