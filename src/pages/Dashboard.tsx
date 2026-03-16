@@ -3,7 +3,7 @@ import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { TopProductsTable } from "@/components/TopProductsTable";
 import { OutOfStockAlertCard } from "@/components/OutOfStockAlertCard";
 import { LowStockAlertCard } from "@/components/LowStockAlertCard";
-
+import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
 import { Package, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
@@ -86,6 +86,11 @@ const Dashboard = () => {
           <LowStockAlertCard />
         </div>
 
+        {/* Store Inventory Status */}
+        <div>
+          <h2 className="text-xl font-semibold text-foreground mb-4">Store Inventory Status</h2>
+          <StoreInventoryStatus />
+        </div>
 
         {/* Metric Cards - Bottom Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

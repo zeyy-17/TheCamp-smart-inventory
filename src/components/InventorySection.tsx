@@ -40,7 +40,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
 
   // Fetch products
   const { data: products = [], isLoading, error } = useQuery<any[]>({
-    queryKey: ['products'],
+    queryKey: ['products', storeName],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
@@ -48,7 +48,8 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
           *,
           supplier:suppliers(*),
           category:categories(*)
-        `)
+        ` as any)
+        .eq('store', storeName)
         .order('name');
       if (error) throw error;
       return data || [];
