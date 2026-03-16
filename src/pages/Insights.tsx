@@ -281,11 +281,14 @@ const Insights = () => {
             </p>
           </div>
           <button
-            onClick={generateInsights}
+            onClick={() => {
+              queryClient.invalidateQueries({ queryKey: ['ai-opportunity-insights'] });
+              generateInsights();
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-            disabled={isLoading}
+            disabled={isLoading || aiFetching}
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading || aiFetching ? 'animate-spin' : ''}`} />
             Refresh
           </button>
         </div>
