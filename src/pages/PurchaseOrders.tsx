@@ -51,6 +51,61 @@ const PurchaseOrders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Auto-update pending orders whose expected delivery date has passed
+      const today = new Date().toISOString().split('T')[0];
+      const pendingDue = data?.filter(
+        (o) => o.status === 'pending' && o.expected_delivery_date <= today
+      );
+
+      if (pendingDue && pendingDue.length > 0) {
+        const ids = pendingDue.map((o) => o.id);
+        await supabase
+          .from('purchase_orders')
+          .update({ status: 'received' })
+          .in('id', ids);
+
+        // Update inventory for each auto-received order
+        for (const order of pendingDue) {
+          if (order.product_id) {
+            const { data: product } = await supabase
+              .from('products')
+              .select('quantity')
+              .eq('id', order.product_id)
+              .single();
+
+            if (product) {
+              await supabase
+                .from('products')
+                .update({
+                  quantity: (product.quantity || 0) + order.quantity,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', order.product_id);
+
+              await supabase.from('movements').insert({
+                product_id: order.product_id,
+                qty_change: order.quantity,
+                reason: `Purchase Order ${order.invoice_number || '#' + order.id} auto-received on delivery date`,
+              });
+            }
+          }
+        }
+
+        // Re-fetch with updated statuses
+        const { data: refreshed, error: refreshError } = await supabase
+          .from('purchase_orders')
+          .select(`
+            *,
+            products(name, sku, cost_price),
+            suppliers(name, contact_email, contact_phone)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (refreshError) throw refreshError;
+        return refreshed;
+      }
+
       return data;
     }
   });
@@ -280,8 +335,9 @@ const PurchaseOrders = () => {
                           <TableCell>
                             <Badge 
                               variant={getStatusColor(group.status)}
-                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                              className={group.status === 'pending' ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}
                               onClick={() => {
+                                if (group.status === 'received' || group.status === 'cancelled') return;
                                 setSelectedStatusGroup({
                                   invoiceNumber: group.invoiceNumber,
                                   status: group.status,
