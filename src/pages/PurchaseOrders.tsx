@@ -335,8 +335,9 @@ const PurchaseOrders = () => {
                           <TableCell>
                             <Badge 
                               variant={getStatusColor(group.status)}
-                              className="cursor-pointer hover:opacity-80 transition-opacity"
+                              className={group.status === 'pending' ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}
                               onClick={() => {
+                                if (group.status === 'received' || group.status === 'cancelled') return;
                                 setSelectedStatusGroup({
                                   invoiceNumber: group.invoiceNumber,
                                   status: group.status,
