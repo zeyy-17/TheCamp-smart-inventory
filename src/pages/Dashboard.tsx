@@ -1,14 +1,9 @@
-import { DashboardCard } from "@/components/DashboardCard";
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
-import { TopProductsTable } from "@/components/TopProductsTable";
 import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
-import { Package, DollarSign } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { subDays, format } from "date-fns";
 
 const Dashboard = () => {
   const navigate = useNavigate();
