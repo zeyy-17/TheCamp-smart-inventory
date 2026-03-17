@@ -85,29 +85,8 @@ const Dashboard = () => {
           <StoreInventoryStatus />
         </div>
 
-        {/* Metric Cards - Bottom Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <DashboardCard
-            title="Total Products"
-            value={productsCount?.toString() || "0"}
-            subtitle="Active items"
-            icon={Package}
-            onClick={handleReorderOpportunity}
-          />
-          <DashboardCard
-            title="Weekly Sales"
-            value={`₱${weeklySales?.toLocaleString() || "0"}`}
-            subtitle="This week"
-            trend={salesTrend ? { value: Math.abs(salesTrend), isPositive: salesTrend > 0 } : undefined}
-            icon={DollarSign}
-          />
-        </div>
-
         {/* Charts Section */}
         <WeeklySalesChart />
-
-        {/* Products Table */}
-        <TopProductsTable />
       </div>
 
       <CreatePurchaseOrderDialog 
