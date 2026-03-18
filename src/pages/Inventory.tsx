@@ -19,7 +19,19 @@ const stores = [
 const Inventory = () => {
   const [searchParams] = useSearchParams();
   const [activeStore, setActiveStore] = useState<string | null>(null);
+  const [showAllProducts, setShowAllProducts] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
+
+  const { data: totalProducts = 0 } = useQuery({
+    queryKey: ['totalProducts'],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
+      if (error) throw error;
+      return count ?? 0;
+    },
+  });
 
   // Handle URL parameters for store and filter
   useEffect(() => {
