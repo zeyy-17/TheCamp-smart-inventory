@@ -69,6 +69,35 @@ const Inventory = () => {
         <p className="text-muted-foreground">Select a store to manage its beverage inventory</p>
       </div>
 
+      {/* Total Products Button */}
+      <div
+        onClick={toggleAllProducts}
+        className={cn(
+          "bg-card rounded-xl p-6 shadow-custom-md border cursor-pointer transition-all duration-300 hover:shadow-custom-lg hover:scale-[1.02]",
+          showAllProducts ? "border-primary border-2" : "border-border"
+        )}
+      >
+        <div className="flex items-center gap-4">
+          <div className="bg-primary/10 p-3 rounded-lg">
+            <Package className="w-6 h-6 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">Total Products</p>
+            <h3 className="text-3xl font-bold text-foreground">{totalProducts}</h3>
+          </div>
+        </div>
+      </div>
+
+      {showAllProducts && (
+        <div className="bg-card border border-border rounded-xl p-6 shadow-custom-md animate-fade-in">
+          <InventorySection
+            storeName="all"
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+          />
+        </div>
+      )}
+
       {/* Store Buttons */}
       <div className="space-y-4">
         {stores.map((store) => (
