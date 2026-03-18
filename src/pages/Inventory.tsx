@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Package } from "lucide-react";
 import InventorySection from "@/components/InventorySection";
 import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import ampersandLogo from "@/assets/ampersand-logo.png";
 import hardinLogo from "@/assets/hardin-logo.png";
 import herexLogo from "@/assets/herex-logo.png";
