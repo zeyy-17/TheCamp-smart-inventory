@@ -37,8 +37,12 @@ const Inventory = () => {
   useEffect(() => {
     const store = searchParams.get('store');
     const filter = searchParams.get('filter');
-    if (store) {
+    if (store === 'all') {
+      setShowAllProducts(true);
+      setActiveStore(null);
+    } else if (store) {
       setActiveStore(store);
+      setShowAllProducts(false);
     }
     if (filter) {
       setStatusFilter(filter);
