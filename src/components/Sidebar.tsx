@@ -40,19 +40,21 @@ export const Sidebar = () => {
       {/* User Profile Section - Links to Account */}
       <Link 
         to="/account" 
-        className="px-6 py-8 flex flex-col items-center hover:bg-sidebar-accent/30 transition-colors cursor-pointer"
+        className="px-4 py-3 flex items-center gap-3 hover:bg-sidebar-accent/30 transition-colors cursor-pointer"
       >
-        <div className="w-24 h-24 rounded-full bg-sidebar-accent border-4 border-sidebar-primary flex items-center justify-center mb-4">
-          <span className="text-3xl font-bold text-sidebar-foreground">
+        <div className="w-9 h-9 rounded-full bg-sidebar-accent border-2 border-sidebar-primary flex items-center justify-center flex-shrink-0">
+          <span className="text-sm font-bold text-sidebar-foreground">
             {getInitials(user?.email || "")}
           </span>
         </div>
-        <h3 className="text-lg font-semibold text-sidebar-foreground tracking-wide">
-          {getDisplayName(user?.email || "")}
-        </h3>
-        <p className="text-sm text-sidebar-muted">
-          {user?.email || "user@example.com"}
-        </p>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-sidebar-foreground tracking-wide truncate">
+            {getDisplayName(user?.email || "")}
+          </p>
+          <p className="text-xs text-sidebar-muted truncate">
+            {user?.email || "user@example.com"}
+          </p>
+        </div>
       </Link>
       
       {/* Navigation */}
