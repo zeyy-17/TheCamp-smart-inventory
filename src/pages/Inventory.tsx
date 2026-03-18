@@ -74,33 +74,39 @@ const Inventory = () => {
       </div>
 
       {/* Total Products Button */}
-      <div
-        onClick={toggleAllProducts}
-        className={cn(
-          "bg-card rounded-xl p-6 shadow-custom-md border cursor-pointer transition-all duration-300 hover:shadow-custom-lg hover:scale-[1.02]",
-          showAllProducts ? "border-primary border-2" : "border-border"
-        )}
-      >
-        <div className="flex items-center gap-4">
-          <div className="bg-primary/10 p-3 rounded-lg">
+      <div className="space-y-0">
+        <Button
+          onClick={toggleAllProducts}
+          className={cn(
+            "w-full h-14 text-lg font-semibold justify-between transition-all shadow-sm hover:shadow-md px-4",
+            showAllProducts
+              ? "bg-card text-foreground border-2 border-primary"
+              : "bg-card text-foreground border border-border hover:bg-muted"
+          )}
+          variant="outline"
+        >
+          <div className="flex items-center gap-3">
             <Package className="w-6 h-6 text-primary" />
+            <span>Total Products</span>
+            <span className="text-2xl font-bold text-foreground">{totalProducts}</span>
           </div>
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Total Products</p>
-            <h3 className="text-3xl font-bold text-foreground">{totalProducts}</h3>
-          </div>
-        </div>
-      </div>
+          {showAllProducts ? (
+            <ChevronUp className="w-5 h-5" />
+          ) : (
+            <ChevronDown className="w-5 h-5" />
+          )}
+        </Button>
 
-      {showAllProducts && (
-        <div className="bg-card border border-border rounded-xl p-6 shadow-custom-md animate-fade-in">
-          <InventorySection
-            storeName="all"
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-          />
-        </div>
-      )}
+        {showAllProducts && (
+          <div className="bg-card border border-t-0 border-border rounded-b-xl p-6 shadow-custom-md animate-fade-in">
+            <InventorySection
+              storeName="all"
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Store Buttons */}
       <div className="space-y-4">
