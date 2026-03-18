@@ -46,12 +46,19 @@ const Inventory = () => {
   }, [searchParams]);
 
   const toggleStore = (storeId: string) => {
+    setShowAllProducts(false);
     if (activeStore === storeId) {
       setActiveStore(null);
     } else {
       setActiveStore(storeId);
-      setStatusFilter(null); // Reset filter when switching stores
+      setStatusFilter(null);
     }
+  };
+
+  const toggleAllProducts = () => {
+    setShowAllProducts(!showAllProducts);
+    setActiveStore(null);
+    setStatusFilter(null);
   };
 
   return (
