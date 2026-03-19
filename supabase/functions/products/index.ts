@@ -148,10 +148,16 @@ Deno.serve(async (req) => {
     // PATCH /products/:id - Update product
     if (req.method === 'PATCH' && productId) {
       const body = await req.json();
+      const parsed = ProductUpdateSchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: 'Validation failed', details: parsed.error.format() }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       
       const { error: updateError } = await supabase
         .from('products')
-        .update(body)
+        .update(parsed.data)
         .eq('id', productId);
 
       if (updateError) throw updateError;

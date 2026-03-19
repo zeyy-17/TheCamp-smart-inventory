@@ -51,10 +51,16 @@ Deno.serve(async (req) => {
     // POST /suppliers - Create supplier
     if (req.method === 'POST') {
       const body = await req.json();
+      const parsed = SupplierSchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: 'Validation failed', details: parsed.error.format() }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       
       const { data, error } = await supabase
         .from('suppliers')
-        .insert(body)
+        .insert(parsed.data)
         .select()
         .single();
 

@@ -50,7 +50,14 @@ Deno.serve(async (req) => {
 
     // POST /movements - Create movement and adjust product quantity
     if (req.method === 'POST') {
-      const { product_id, qty_change, reason } = await req.json();
+      const body = await req.json();
+      const parsed = MovementSchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: 'Validation failed', details: parsed.error.format() }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const { product_id, qty_change, reason } = parsed.data;
 
       // Create movement record
       const { data: movement, error: movementError } = await supabase
