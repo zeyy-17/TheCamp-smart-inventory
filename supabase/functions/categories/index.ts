@@ -1,5 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.0';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { createErrorResponse } from '../_shared/error-handler.ts';
+
+const CategorySchema = z.object({
+  name: z.string().trim().min(1).max(100),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,10 +49,16 @@ Deno.serve(async (req) => {
     // POST /categories - Create category
     if (req.method === 'POST') {
       const body = await req.json();
+      const parsed = CategorySchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: 'Validation failed', details: parsed.error.format() }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       
       const { data, error } = await supabase
         .from('categories')
-        .insert(body)
+        .insert(parsed.data)
         .select()
         .single();
 

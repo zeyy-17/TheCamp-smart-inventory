@@ -1,5 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.0';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { createErrorResponse } from '../_shared/error-handler.ts';
+
+const MovementSchema = z.object({
+  product_id: z.number().int().positive(),
+  qty_change: z.number().int(),
+  reason: z.string().trim().max(500).nullable().optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -43,7 +50,14 @@ Deno.serve(async (req) => {
 
     // POST /movements - Create movement and adjust product quantity
     if (req.method === 'POST') {
-      const { product_id, qty_change, reason } = await req.json();
+      const body = await req.json();
+      const parsed = MovementSchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: 'Validation failed', details: parsed.error.format() }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const { product_id, qty_change, reason } = parsed.data;
 
       // Create movement record
       const { data: movement, error: movementError } = await supabase

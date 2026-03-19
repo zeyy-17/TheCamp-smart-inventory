@@ -61,12 +61,7 @@ export function BulkSaleDialog({ open, onOpenChange }: BulkSaleDialogProps) {
 
         if (saleError) throw saleError;
 
-        const { error: updateError } = await supabase
-          .from("products")
-          .update({ quantity: product.quantity - quantity })
-          .eq("id", product.id);
-
-        if (updateError) throw updateError;
+        // Product quantity updated automatically by database trigger
       }
     },
     onSuccess: () => {

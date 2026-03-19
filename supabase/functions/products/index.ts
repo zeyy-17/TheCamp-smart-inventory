@@ -1,5 +1,30 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.0';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { createErrorResponse } from '../_shared/error-handler.ts';
+
+const ProductCreateSchema = z.object({
+  name: z.string().trim().min(1).max(255),
+  sku: z.string().trim().min(1).max(100),
+  cost_price: z.number().nonnegative().finite(),
+  retail_price: z.number().nonnegative().finite(),
+  quantity: z.number().int().nonnegative().default(0),
+  reorder_level: z.number().int().nonnegative().default(0),
+  category_id: z.number().int().positive().nullable().optional(),
+  supplier_id: z.number().int().positive().nullable().optional(),
+  store: z.string().trim().max(100).optional(),
+}).refine(d => d.retail_price >= d.cost_price, { message: 'Retail price must be >= cost price' });
+
+const ProductUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(255).optional(),
+  sku: z.string().trim().min(1).max(100).optional(),
+  cost_price: z.number().nonnegative().finite().optional(),
+  retail_price: z.number().nonnegative().finite().optional(),
+  quantity: z.number().int().nonnegative().optional(),
+  reorder_level: z.number().int().nonnegative().optional(),
+  category_id: z.number().int().positive().nullable().optional(),
+  supplier_id: z.number().int().positive().nullable().optional(),
+  store: z.string().trim().max(100).optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,10 +76,16 @@ Deno.serve(async (req) => {
     // POST /products - Create product
     if (req.method === 'POST') {
       const body = await req.json();
+      const parsed = ProductCreateSchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: 'Validation failed', details: parsed.error.format() }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       
       const { data, error } = await supabase
         .from('products')
-        .insert(body)
+        .insert(parsed.data)
         .select(`
           *,
           supplier:suppliers(*),
@@ -117,10 +148,16 @@ Deno.serve(async (req) => {
     // PATCH /products/:id - Update product
     if (req.method === 'PATCH' && productId) {
       const body = await req.json();
+      const parsed = ProductUpdateSchema.safeParse(body);
+      if (!parsed.success) {
+        return new Response(JSON.stringify({ error: 'Validation failed', details: parsed.error.format() }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       
       const { error: updateError } = await supabase
         .from('products')
-        .update(body)
+        .update(parsed.data)
         .eq('id', productId);
 
       if (updateError) throw updateError;

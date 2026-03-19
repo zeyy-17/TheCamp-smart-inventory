@@ -138,21 +138,7 @@ export const RecordSaleDialog = ({ open, onOpenChange }: RecordSaleDialogProps) 
 
       if (saleError) throw saleError;
 
-      // Update product quantities
-      for (const record of saleRecords) {
-        const product = products.find(p => p.id === record.product_id);
-        if (product) {
-          const { error: updateError } = await supabase
-            .from('products')
-            .update({ 
-              quantity: product.quantity - record.quantity,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', record.product_id);
-
-          if (updateError) throw updateError;
-        }
-      }
+      // Product quantities are updated automatically by database trigger
 
       return saleRecords;
     },
