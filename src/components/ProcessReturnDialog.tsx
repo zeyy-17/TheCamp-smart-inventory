@@ -85,25 +85,7 @@ export const ProcessReturnDialog = ({ open, onOpenChange }: ProcessReturnDialogP
 
       if (returnError) throw returnError;
 
-      // Get current product quantity
-      const { data: product, error: productError } = await supabase
-        .from('products')
-        .select('quantity')
-        .eq('id', sale.product_id)
-        .single();
-
-      if (productError) throw productError;
-
-      // Add returned quantity back to inventory
-      const { error: updateError } = await supabase
-        .from('products')
-        .update({ 
-          quantity: product.quantity + values.quantity,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', sale.product_id);
-
-      if (updateError) throw updateError;
+      // Product quantity updated automatically by database trigger
 
       return returnRecord;
     },
