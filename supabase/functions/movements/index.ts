@@ -1,5 +1,12 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.0';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { createErrorResponse } from '../_shared/error-handler.ts';
+
+const MovementSchema = z.object({
+  product_id: z.number().int().positive(),
+  qty_change: z.number().int(),
+  reason: z.string().trim().max(500).nullable().optional(),
+});
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
