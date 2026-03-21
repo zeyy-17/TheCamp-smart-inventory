@@ -49,7 +49,7 @@ const Inventory = () => {
       </div>
 
       {/* Store Buttons */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {stores.map((store) => (
           <div key={store.id} className="space-y-0">
             <Button
