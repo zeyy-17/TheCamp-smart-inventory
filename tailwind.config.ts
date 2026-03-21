@@ -60,6 +60,7 @@ export default {
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         info: "hsl(var(--info))",
+        "page-foreground": "hsl(var(--page-foreground))",
       },
       borderRadius: {
         lg: "var(--radius)",
