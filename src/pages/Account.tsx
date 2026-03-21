@@ -32,9 +32,26 @@ const Account = () => {
       toast({ title: "Username Required", description: "Please enter a username", variant: "destructive" });
       return;
     }
+    if (!usernamePassword) {
+      toast({ title: "Password Required", description: "Please enter your password to confirm the change", variant: "destructive" });
+      return;
+    }
     setIsSavingUsername(true);
+
+    // Verify password first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email || '',
+      password: usernamePassword,
+    });
+    if (signInError) {
+      setIsSavingUsername(false);
+      toast({ title: "Invalid Password", description: "The password you entered is incorrect", variant: "destructive" });
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ data: { username: username.trim() } });
     setIsSavingUsername(false);
+    setUsernamePassword('');
     if (error) {
       toast({ title: "Update Failed", description: error.message, variant: "destructive" });
       return;
