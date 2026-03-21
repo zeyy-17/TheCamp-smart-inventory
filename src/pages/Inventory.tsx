@@ -44,7 +44,7 @@ const Inventory = () => {
     <div className="p-8 space-y-6 animate-fade-in min-h-screen w-full">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Inventory Management</h1>
+        <h1 className="text-3xl font-bold text-metallic-black mb-2">Inventory Management</h1>
         <p className="text-muted-foreground">Select a store to manage its beverage inventory</p>
       </div>
 

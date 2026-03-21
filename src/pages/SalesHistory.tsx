@@ -85,7 +85,7 @@ export default function SalesHistory() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Sales History</h1>
+            <h1 className="text-3xl font-bold text-metallic-black">Sales History</h1>
             <p className="text-muted-foreground mt-1">View and manage all sales transactions</p>
           </div>
           <div className="flex gap-2">

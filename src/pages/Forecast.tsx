@@ -173,7 +173,7 @@ const Forecast = () => {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-bold text-foreground">Sales Forecast</h1>
+              <h1 className="text-3xl font-bold text-metallic-black">Sales Forecast</h1>
               <Badge variant="secondary" className="gap-1">
                 <BrainCircuit className="w-3 h-3" />
                 AI-Powered
