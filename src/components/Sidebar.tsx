@@ -44,15 +44,15 @@ export const Sidebar = () => {
       >
         <div className="w-9 h-9 rounded-full bg-sidebar-accent border-2 border-sidebar-primary flex items-center justify-center flex-shrink-0">
           <span className="text-sm font-bold text-sidebar-foreground">
-            {getInitials(user?.email || "")}
+            {getInitials(user?.user_metadata?.username || user?.email || "")}
           </span>
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-sidebar-foreground tracking-wide truncate">
-            {getDisplayName(user?.email || "")}
+            {user?.user_metadata?.username || getDisplayName(user?.email || "")}
           </p>
           <p className="text-xs text-sidebar-muted truncate">
-            {user?.email || "user@example.com"}
+            {user?.user_metadata?.username ? user.email : (user?.email || "user@example.com")}
           </p>
         </div>
       </Link>
