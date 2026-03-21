@@ -129,7 +129,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    background-image: url('/images/silver-metallic-background.jpg');
+    background-image: url('/images/red-black-background.jpg');
     background-size: cover;
     background-attachment: fixed;
     background-position: center;
