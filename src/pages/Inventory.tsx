@@ -45,7 +45,7 @@ const Inventory = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-metallic-black mb-2">Inventory Management</h1>
-        <p className="text-muted-foreground">Select a store to manage its beverage inventory</p>
+        <p className="text-page-foreground/70">Select a store to manage its beverage inventory</p>
       </div>
 
       {/* Store Buttons */}
