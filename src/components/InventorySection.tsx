@@ -191,11 +191,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-card p-4 rounded-xl shadow-custom-md border border-border">
-          <div className="text-sm text-muted-foreground mb-1">Total Products</div>
-          <div className="text-2xl font-bold text-foreground">{products.length}</div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Button 
           variant="outline"
           className="bg-card p-4 rounded-xl shadow-custom-md border border-border hover:bg-warning/10 h-auto flex flex-col items-start transition-all w-full"
