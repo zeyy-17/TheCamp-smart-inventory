@@ -121,7 +121,7 @@ const Reports = () => {
   };
 
   return (
-    <div className="flex-1 bg-background p-8">
+    <div className="flex-1 p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
