@@ -55,10 +55,10 @@ const Inventory = () => {
             <Button
               onClick={() => toggleStore(store.id)}
               className={cn(
-                "w-full h-14 text-lg font-semibold justify-between transition-all shadow-sm hover:shadow-md px-4",
+                "w-full h-14 text-lg font-semibold justify-between transition-all shadow-sm hover:shadow-md px-4 text-gray-900",
                 activeStore === store.id 
-                  ? "bg-card text-foreground border-2 border-primary" 
-                  : "bg-card text-foreground border border-border hover:bg-muted"
+                  ? "bg-card border-2 border-primary" 
+                  : "bg-card border border-border hover:bg-muted"
               )}
               variant="outline"
             >
