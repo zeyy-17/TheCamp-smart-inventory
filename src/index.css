@@ -10,7 +10,8 @@ All colors MUST be HSL.
   :root {
     /* Black & Neutral Palette */
     --background: 0 0% 96%;
-    --foreground: 0 0% 93%;
+    --foreground: 0 0% 10%;
+    --page-foreground: 0 0% 93%;
 
     --card: 0 0% 93%;
     --card-foreground: 0 0% 10%;
@@ -28,7 +29,7 @@ All colors MUST be HSL.
 
     /* Muted: Soft Gray */
     --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 75%;
+    --muted-foreground: 0 0% 40%;
 
     /* Accent: Dark Gray */
     --accent: 0 0% 20%;

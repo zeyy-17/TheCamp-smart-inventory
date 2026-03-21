@@ -276,7 +276,7 @@ const Insights = () => {
                 AI Analytics
               </Badge>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-page-foreground/70">
               Machine learning insights • Pattern recognition • Predictive recommendations
             </p>
           </div>

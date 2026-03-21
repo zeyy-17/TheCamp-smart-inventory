@@ -86,7 +86,7 @@ export default function SalesHistory() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-metallic-black">Sales History</h1>
-            <p className="text-muted-foreground mt-1">View and manage all sales transactions</p>
+            <p className="text-page-foreground/70 mt-1">View and manage all sales transactions</p>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setSaleDialogOpen(true)}>

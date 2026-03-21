@@ -179,7 +179,7 @@ const Forecast = () => {
                 AI-Powered
               </Badge>
             </div>
-            <p className="text-muted-foreground">
+            <p className="text-page-foreground/70">
               Gemini AI predictions based on your sales data
             </p>
           </div>

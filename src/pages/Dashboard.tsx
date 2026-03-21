@@ -13,7 +13,7 @@ const Dashboard = () => {
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-metallic-black">Dashboard Overview</h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-page-foreground/70 mt-1">
             Real-time insights for smarter inventory decisions
           </p>
         </div>
@@ -21,7 +21,7 @@ const Dashboard = () => {
 
         {/* Store Inventory Status */}
         <div>
-          <h2 className="text-xl font-semibold text-foreground mb-4">Store Inventory Status</h2>
+          <h2 className="text-xl font-semibold text-page-foreground mb-4">Store Inventory Status</h2>
           <StoreInventoryStatus />
         </div>
 

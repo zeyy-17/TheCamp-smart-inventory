@@ -45,7 +45,7 @@ const Inventory = () => {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-metallic-black mb-2">Inventory Management</h1>
-        <p className="text-muted-foreground">Select a store to manage its beverage inventory</p>
+        <p className="text-page-foreground/70">Select a store to manage its beverage inventory</p>
       </div>
 
       {/* Store Buttons */}
@@ -55,10 +55,10 @@ const Inventory = () => {
             <Button
               onClick={() => toggleStore(store.id)}
               className={cn(
-                "w-full h-14 text-lg font-semibold justify-between transition-all shadow-sm hover:shadow-md px-4 text-gray-900",
+                "w-full h-14 text-lg font-semibold justify-between transition-all shadow-sm hover:shadow-md px-4",
                 activeStore === store.id 
-                  ? "bg-card border-2 border-primary" 
-                  : "bg-card border border-border hover:bg-muted"
+                  ? "bg-card text-card-foreground border-2 border-primary" 
+                  : "bg-card text-card-foreground border border-border hover:bg-muted"
               )}
               variant="outline"
             >
