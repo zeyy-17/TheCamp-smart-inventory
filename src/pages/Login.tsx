@@ -6,12 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { LogIn } from 'lucide-react';
+import { LogIn, Mail, User } from 'lucide-react';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [loginValue, setLoginValue] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loginMode, setLoginMode] = useState<'email' | 'username'>('email');
   const { signIn, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -25,13 +28,45 @@ const Login = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
+    let email = loginValue;
+
+    // If signing in with username, look up the email first
+    if (loginMode === 'username') {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/functions/v1/lookup-username`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: loginValue }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.email) {
+          toast({
+            title: "Login Failed",
+            description: "Username not found",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+        email = data.email;
+      } catch {
+        toast({
+          title: "Login Failed",
+          description: "Could not verify username",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+    }
+
     const { error } = await signIn(email, password);
-    
+
     if (error) {
       toast({
         title: "Login Failed",
-        description: error.message || "Invalid email or password",
+        description: error.message || "Invalid credentials",
         variant: "destructive",
       });
     } else {
@@ -41,7 +76,7 @@ const Login = () => {
       });
       navigate('/');
     }
-    
+
     setIsLoading(false);
   };
 
@@ -58,15 +93,39 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Login mode toggle */}
+          <div className="flex gap-2 mb-6">
+            <Button
+              type="button"
+              variant={loginMode === 'email' ? 'default' : 'outline'}
+              className="flex-1"
+              onClick={() => { setLoginMode('email'); setLoginValue(''); }}
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Email
+            </Button>
+            <Button
+              type="button"
+              variant={loginMode === 'username' ? 'default' : 'outline'}
+              className="flex-1"
+              onClick={() => { setLoginMode('username'); setLoginValue(''); }}
+            >
+              <User className="w-4 h-4 mr-2" />
+              Username
+            </Button>
+          </div>
+
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="signin-email">Email</Label>
+              <Label htmlFor="signin-login">
+                {loginMode === 'email' ? 'Email' : 'Username'}
+              </Label>
               <Input
-                id="signin-email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="signin-login"
+                type={loginMode === 'email' ? 'email' : 'text'}
+                placeholder={loginMode === 'email' ? 'Enter your email' : 'Enter your username'}
+                value={loginValue}
+                onChange={(e) => setLoginValue(e.target.value)}
                 required
               />
             </div>
