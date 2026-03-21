@@ -232,7 +232,7 @@ const PurchaseOrders = () => {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-metallic-black mb-2">Purchase Orders</h1>
-            <p className="text-muted-foreground">Track and manage your pre-ordered stocks</p>
+            <p className="text-page-foreground/70">Track and manage your pre-ordered stocks</p>
           </div>
           <Button onClick={() => setDialogOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />

@@ -21,7 +21,7 @@ const Dashboard = () => {
 
         {/* Store Inventory Status */}
         <div>
-          <h2 className="text-xl font-semibold text-foreground mb-4">Store Inventory Status</h2>
+          <h2 className="text-xl font-semibold text-page-foreground mb-4">Store Inventory Status</h2>
           <StoreInventoryStatus />
         </div>
 
