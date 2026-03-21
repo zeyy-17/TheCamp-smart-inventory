@@ -28,7 +28,7 @@ All colors MUST be HSL.
 
     /* Muted: Soft Gray */
     --muted: 0 0% 92%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 75%;
 
     /* Accent: Dark Gray */
     --accent: 0 0% 20%;
