@@ -12,7 +12,7 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Dashboard Overview</h1>
+          <h1 className="text-3xl font-bold text-metallic-black">Dashboard Overview</h1>
           <p className="text-muted-foreground mt-1">
             Real-time insights for smarter inventory decisions
           </p>

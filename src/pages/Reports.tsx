@@ -126,7 +126,7 @@ const Reports = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Reports</h1>
+            <h1 className="text-3xl font-bold text-metallic-black">Reports</h1>
             <p className="text-muted-foreground mt-1">
               Generate and download comprehensive inventory reports
             </p>

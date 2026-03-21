@@ -131,3 +131,18 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .text-metallic-black {
+    background: linear-gradient(
+      180deg,
+      hsl(0 0% 35%) 0%,
+      hsl(0 0% 5%) 40%,
+      hsl(0 0% 20%) 60%,
+      hsl(0 0% 5%) 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

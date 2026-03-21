@@ -231,7 +231,7 @@ const PurchaseOrders = () => {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Purchase Orders</h1>
+            <h1 className="text-3xl font-bold text-metallic-black mb-2">Purchase Orders</h1>
             <p className="text-muted-foreground">Track and manage your pre-ordered stocks</p>
           </div>
           <Button onClick={() => setDialogOpen(true)}>
