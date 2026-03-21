@@ -16,6 +16,7 @@ const Account = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [usernamePassword, setUsernamePassword] = useState('');
   const [isSavingUsername, setIsSavingUsername] = useState(false);
   const { toast } = useToast();
 
