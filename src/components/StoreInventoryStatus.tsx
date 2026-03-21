@@ -62,7 +62,7 @@ export const StoreInventoryStatus = () => {
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
                 <img src={store.logo} alt={store.name} className="h-8 w-8 object-contain" />
-                <CardTitle className="text-lg font-semibold text-foreground">{store.name}</CardTitle>
+                <CardTitle className="text-lg font-semibold text-gray-900">{store.name}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
