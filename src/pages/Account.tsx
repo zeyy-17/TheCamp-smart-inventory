@@ -132,6 +132,17 @@ const Account = () => {
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username-password">Password</Label>
+                  <Input
+                    id="username-password"
+                    type="password"
+                    value={usernamePassword}
+                    onChange={(e) => setUsernamePassword(e.target.value)}
+                    placeholder="Enter your password to confirm"
+                    required
+                  />
+                </div>
                 <Button type="submit" disabled={isSavingUsername}>
                   {isSavingUsername ? 'Saving...' : 'Save Username'}
                 </Button>
