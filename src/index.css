@@ -10,7 +10,7 @@ All colors MUST be HSL.
   :root {
     /* Black & Neutral Palette */
     --background: 0 0% 96%;
-    --foreground: 0 0% 10%;
+    --foreground: 0 0% 93%;
 
     --card: 0 0% 93%;
     --card-foreground: 0 0% 10%;
