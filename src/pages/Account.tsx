@@ -16,6 +16,7 @@ const Account = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [username, setUsername] = useState('');
+  const [usernamePassword, setUsernamePassword] = useState('');
   const [isSavingUsername, setIsSavingUsername] = useState(false);
   const { toast } = useToast();
 
@@ -31,9 +32,26 @@ const Account = () => {
       toast({ title: "Username Required", description: "Please enter a username", variant: "destructive" });
       return;
     }
+    if (!usernamePassword) {
+      toast({ title: "Password Required", description: "Please enter your password to confirm the change", variant: "destructive" });
+      return;
+    }
     setIsSavingUsername(true);
+
+    // Verify password first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email || '',
+      password: usernamePassword,
+    });
+    if (signInError) {
+      setIsSavingUsername(false);
+      toast({ title: "Invalid Password", description: "The password you entered is incorrect", variant: "destructive" });
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ data: { username: username.trim() } });
     setIsSavingUsername(false);
+    setUsernamePassword('');
     if (error) {
       toast({ title: "Update Failed", description: error.message, variant: "destructive" });
       return;
@@ -111,6 +129,17 @@ const Account = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Enter your username"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="username-password">Password</Label>
+                  <Input
+                    id="username-password"
+                    type="password"
+                    value={usernamePassword}
+                    onChange={(e) => setUsernamePassword(e.target.value)}
+                    placeholder="Enter your password to confirm"
                     required
                   />
                 </div>
