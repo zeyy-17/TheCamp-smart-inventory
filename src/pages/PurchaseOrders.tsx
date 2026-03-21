@@ -252,9 +252,9 @@ const PurchaseOrders = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeStore} onValueChange={setActiveStore} className="mb-4">
-              <TabsList>
+              <TabsList className="bg-accent/50 h-12 p-1 gap-1">
                 {stores.map((store) => (
-                  <TabsTrigger key={store} value={store}>
+                  <TabsTrigger key={store} value={store} className="px-6 py-2.5 text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-foreground">
                     {store}
                   </TabsTrigger>
                 ))}
