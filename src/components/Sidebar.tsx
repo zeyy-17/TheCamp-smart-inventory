@@ -51,9 +51,6 @@ export const Sidebar = () => {
           <p className="text-sm font-semibold text-sidebar-foreground tracking-wide truncate">
             {user?.user_metadata?.username || getDisplayName(user?.email || "")}
           </p>
-          <p className="text-xs text-sidebar-muted truncate">
-            {user?.user_metadata?.username ? user.email : (user?.email || "user@example.com")}
-          </p>
         </div>
       </Link>
       
