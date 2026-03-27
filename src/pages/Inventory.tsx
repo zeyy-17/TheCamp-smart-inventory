@@ -94,8 +94,6 @@ const Inventory = () => {
         ))}
       </div>
 
-      {/* Deletion Log */}
-      <DeletionLogBar />
     </div>
   );
 };

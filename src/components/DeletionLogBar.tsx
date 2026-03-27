@@ -1,15 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const DeletionLogBar = () => {
-  const [expanded, setExpanded] = useState(false);
-
   const { data: logs = [] } = useQuery({
     queryKey: ['deletion-logs'],
     queryFn: async () => {
@@ -23,64 +21,52 @@ const DeletionLogBar = () => {
     },
   });
 
-  if (logs.length === 0) return null;
-
   return (
-    <div className="bg-card border border-border rounded-xl shadow-custom-md overflow-hidden">
-      <Button
-        variant="ghost"
-        onClick={() => setExpanded(!expanded)}
-        className="w-full h-12 justify-between px-4 rounded-none hover:bg-muted/50"
-      >
-        <div className="flex items-center gap-2">
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2">
           <Trash2 className="h-4 w-4 text-destructive" />
-          <span className="font-semibold text-sm text-card-foreground">Deletion Log</span>
-          <Badge variant="secondary" className="text-xs">{logs.length}</Badge>
-        </div>
-        {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-      </Button>
-
-      {expanded && (
-        <ScrollArea className="max-h-[300px]">
-          <div className="border-t border-border">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 sticky top-0">
-                <tr>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Product</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">SKU</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Store</th>
-                  <th className="text-center p-3 font-medium text-muted-foreground">Qty</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">Cost</th>
-                  <th className="text-right p-3 font-medium text-muted-foreground">Retail</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Deleted By</th>
-                  <th className="text-left p-3 font-medium text-muted-foreground">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log: any) => (
-                  <tr key={log.id} className="border-t border-border hover:bg-muted/30">
-                    <td className="p-3 font-medium text-card-foreground">{log.product_name}</td>
-                    <td className="p-3 text-muted-foreground">{log.sku}</td>
-                    <td className="p-3 text-muted-foreground">{log.store || '—'}</td>
-                    <td className="p-3 text-center text-card-foreground">{log.quantity ?? '—'}</td>
-                    <td className="p-3 text-right text-card-foreground">
-                      {log.cost_price != null ? `₱${Number(log.cost_price).toFixed(2)}` : '—'}
-                    </td>
-                    <td className="p-3 text-right text-card-foreground">
-                      {log.retail_price != null ? `₱${Number(log.retail_price).toFixed(2)}` : '—'}
-                    </td>
-                    <td className="p-3 text-muted-foreground text-xs">{log.deleted_by || '—'}</td>
-                    <td className="p-3 text-muted-foreground text-xs">
-                      {format(new Date(log.deleted_at), "MMM dd, yyyy h:mm a")}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <span className="hidden sm:inline">Deletion Log</span>
+          {logs.length > 0 && (
+            <Badge variant="secondary" className="text-xs px-1.5 py-0">{logs.length}</Badge>
+          )}
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-[400px] sm:w-[540px]">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <Trash2 className="h-5 w-5 text-destructive" />
+            Deletion Log
+          </SheetTitle>
+        </SheetHeader>
+        <ScrollArea className="h-[calc(100vh-100px)] mt-4">
+          {logs.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No deleted items yet.</p>
+          ) : (
+            <div className="space-y-3 pr-4">
+              {logs.map((log: any) => (
+                <div key={log.id} className="border border-border rounded-lg p-3 space-y-1 bg-muted/30">
+                  <div className="flex justify-between items-start">
+                    <span className="font-medium text-sm text-card-foreground">{log.product_name}</span>
+                    <Badge variant="outline" className="text-xs">{log.store || '—'}</Badge>
+                  </div>
+                  <div className="text-xs text-muted-foreground">SKU: {log.sku}</div>
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    <span>Qty: {log.quantity ?? '—'}</span>
+                    <span>Cost: {log.cost_price != null ? `₱${Number(log.cost_price).toFixed(2)}` : '—'}</span>
+                    <span>Retail: {log.retail_price != null ? `₱${Number(log.retail_price).toFixed(2)}` : '—'}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t border-border mt-1">
+                    <span>{log.deleted_by || '—'}</span>
+                    <span>{format(new Date(log.deleted_at), "MMM dd, yyyy h:mm a")}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </ScrollArea>
-      )}
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
