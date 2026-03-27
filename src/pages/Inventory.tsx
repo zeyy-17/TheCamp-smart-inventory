@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import InventorySection from "@/components/InventorySection";
+import DeletionLogBar from "@/components/DeletionLogBar";
 import { cn } from "@/lib/utils";
 import ampersandLogo from "@/assets/ampersand-logo.png";
 import hardinLogo from "@/assets/hardin-logo.png";
@@ -90,6 +91,9 @@ const Inventory = () => {
           </div>
         ))}
       </div>
+
+      {/* Deletion Log */}
+      <DeletionLogBar />
     </div>
   );
 };

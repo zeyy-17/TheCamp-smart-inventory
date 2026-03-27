@@ -114,6 +114,19 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
 
   const deleteMutation = useMutation({
     mutationFn: async (productId: number) => {
+      // Find the product to log its details before deletion
+      const productToLog = products.find((p: any) => p.id === productId);
+      if (productToLog) {
+        await supabase.from('deletion_logs').insert({
+          product_name: productToLog.name,
+          sku: productToLog.sku,
+          store: productToLog.store,
+          quantity: productToLog.quantity,
+          cost_price: productToLog.cost_price,
+          retail_price: productToLog.retail_price,
+          deleted_by: user?.email || 'unknown',
+        });
+      }
       const { error } = await supabase
         .from('products')
         .delete()
@@ -124,6 +137,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
       toast.success("Product removed successfully");
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['top-products'] });
+      queryClient.invalidateQueries({ queryKey: ['deletion-logs'] });
     },
     onError: (error: any) => {
       console.error("Delete error:", error);

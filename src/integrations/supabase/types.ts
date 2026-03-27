@@ -32,6 +32,42 @@ export type Database = {
         }
         Relationships: []
       }
+      deletion_logs: {
+        Row: {
+          cost_price: number | null
+          deleted_at: string
+          deleted_by: string | null
+          id: number
+          product_name: string
+          quantity: number | null
+          retail_price: number | null
+          sku: string
+          store: string | null
+        }
+        Insert: {
+          cost_price?: number | null
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: number
+          product_name: string
+          quantity?: number | null
+          retail_price?: number | null
+          sku: string
+          store?: string | null
+        }
+        Update: {
+          cost_price?: number | null
+          deleted_at?: string
+          deleted_by?: string | null
+          id?: number
+          product_name?: string
+          quantity?: number | null
+          retail_price?: number | null
+          sku?: string
+          store?: string | null
+        }
+        Relationships: []
+      }
       movements: {
         Row: {
           created_at: string | null
