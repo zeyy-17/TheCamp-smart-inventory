@@ -52,6 +52,7 @@ export const ChangeStatusDialog = ({
     if (open) {
       setSelectedStatus(currentStatus);
       setCancelNote("");
+      setReceivedNote("");
     }
   }, [open, currentStatus]);
 
