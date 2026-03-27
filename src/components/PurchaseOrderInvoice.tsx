@@ -50,7 +50,7 @@ export const PurchaseOrderInvoice = ({
           {/* Invoice Header */}
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
             <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Invoice #:</span>
+              <span className="text-sm text-muted-foreground">PO #:</span>
               <span className="font-semibold">{invoiceNumber}</span>
             </div>
             <div className="flex justify-between">

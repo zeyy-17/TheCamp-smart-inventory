@@ -272,7 +272,7 @@ const PurchaseOrders = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Invoice #</TableHead>
+                      <TableHead>PO #</TableHead>
                       <TableHead>Store(s)</TableHead>
                       <TableHead>Products</TableHead>
                       <TableHead>Supplier</TableHead>
