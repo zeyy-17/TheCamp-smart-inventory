@@ -44,6 +44,8 @@ export const ChangeStatusDialog = ({
   const [selectedStatus, setSelectedStatus] = useState(currentStatus);
   const [cancelNote, setCancelNote] = useState("");
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showReceivedNote, setShowReceivedNote] = useState(false);
+  const [receivedNote, setReceivedNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
