@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Label } from "@/components/ui/label";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -27,6 +29,9 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   
@@ -130,9 +135,25 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
     },
   });
 
-  const handleRemoveProduct = () => {
+  const handleRemoveProduct = async () => {
     if (!productToDelete) return;
+    if (!deletePassword) {
+      toast.error("Please enter your password to confirm deletion");
+      return;
+    }
+    setIsVerifyingPassword(true);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email || '',
+      password: deletePassword,
+    });
+    if (signInError) {
+      setIsVerifyingPassword(false);
+      toast.error("Incorrect password. Deletion cancelled.");
+      return;
+    }
+    setIsVerifyingPassword(false);
     deleteMutation.mutate(productToDelete);
+    setDeletePassword("");
   };
 
   const handleAddSuccess = () => {
@@ -367,18 +388,29 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
         />
       )}
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletePassword(""); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product from your inventory.
+              This action cannot be undone. This will permanently delete the product from your inventory. Enter your password to confirm.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-2">
+            <Label htmlFor="delete-password" className="text-sm font-medium">Password</Label>
+            <Input
+              id="delete-password"
+              type="password"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+              placeholder="Enter your password"
+              className="mt-1"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemoveProduct}>
-              Confirm Remove
+            <AlertDialogAction onClick={handleRemoveProduct} disabled={!deletePassword || isVerifyingPassword}>
+              {isVerifyingPassword ? "Verifying..." : "Confirm Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
