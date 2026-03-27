@@ -208,7 +208,7 @@ export const ReportSummaryDialog = ({
 
       autoTable(doc, {
         startY: yPos,
-        head: [['Invoice #', 'Product', 'Supplier', 'Qty', 'Status', 'Expected Delivery']],
+        head: [['PO #', 'Product', 'Supplier', 'Qty', 'Status', 'Expected Delivery']],
         body: purchaseOrdersData.map(po => [
           po.invoice_number || `PO-${po.id}`,
           po.products?.name || 'N/A',
