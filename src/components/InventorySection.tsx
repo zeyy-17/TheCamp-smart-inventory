@@ -29,6 +29,9 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [isVerifyingPassword, setIsVerifyingPassword] = useState(false);
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const queryClient = useQueryClient();
   
