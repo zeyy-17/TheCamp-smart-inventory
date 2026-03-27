@@ -135,9 +135,25 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
     },
   });
 
-  const handleRemoveProduct = () => {
+  const handleRemoveProduct = async () => {
     if (!productToDelete) return;
+    if (!deletePassword) {
+      toast.error("Please enter your password to confirm deletion");
+      return;
+    }
+    setIsVerifyingPassword(true);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: user?.email || '',
+      password: deletePassword,
+    });
+    if (signInError) {
+      setIsVerifyingPassword(false);
+      toast.error("Incorrect password. Deletion cancelled.");
+      return;
+    }
+    setIsVerifyingPassword(false);
     deleteMutation.mutate(productToDelete);
+    setDeletePassword("");
   };
 
   const handleAddSuccess = () => {
