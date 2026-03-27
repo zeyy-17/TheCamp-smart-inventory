@@ -174,6 +174,29 @@ export const ChangeStatusDialog = ({
     }
   };
 
+  const handleSaveReceivedNote = async () => {
+    if (receivedNote.trim()) {
+      try {
+        for (const order of orders) {
+          const existingNotes = order.notes || "";
+          const noteText = `[RECEIVED NOTE: ${receivedNote.trim()}]`;
+          const newNotes = existingNotes ? `${existingNotes}\n${noteText}` : noteText;
+          
+          await supabase
+            .from("purchase_orders")
+            .update({ notes: newNotes })
+            .eq("id", order.id);
+        }
+        queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+        toast.success("Note added to purchase order");
+      } catch (error) {
+        toast.error("Failed to save note");
+      }
+    }
+    setShowReceivedNote(false);
+    setReceivedNote("");
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -261,6 +284,37 @@ export const ChangeStatusDialog = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showReceivedNote} onOpenChange={(open) => {
+        if (!open) {
+          setShowReceivedNote(false);
+          setReceivedNote("");
+        }
+      }}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Add a Note - {invoiceNumber}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="receivedNote">Note / Comment (optional)</Label>
+            <Textarea
+              id="receivedNote"
+              value={receivedNote}
+              onChange={(e) => setReceivedNote(e.target.value)}
+              placeholder="e.g. Items arrived in good condition, 2 bottles damaged..."
+              rows={4}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowReceivedNote(false); setReceivedNote(""); }}>
+              Skip
+            </Button>
+            <Button onClick={handleSaveReceivedNote}>
+              Save Note
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
