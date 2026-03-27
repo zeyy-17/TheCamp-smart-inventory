@@ -148,6 +148,9 @@ export const ChangeStatusDialog = ({
           }
         }
         toast.success(`Inventory updated! Orders marked as received.`);
+        // Show note dialog after receiving
+        onOpenChange(false);
+        setShowReceivedNote(true);
       } else {
         // Just update status for pending
         const { error } = await supabase
@@ -156,19 +159,13 @@ export const ChangeStatusDialog = ({
           .in("id", orderIds);
 
         if (error) throw error;
+        toast.success("Status updated successfully");
+        onOpenChange(false);
       }
 
       queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["movements"] });
-      
-      if (status === "cancelled") {
-        toast.success("Order cancelled successfully");
-      } else if (status !== "received") {
-        toast.success("Status updated successfully");
-      }
-      
-      onOpenChange(false);
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
