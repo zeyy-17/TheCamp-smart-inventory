@@ -44,6 +44,7 @@ const PurchaseOrders = () => {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedStatusGroup, setSelectedStatusGroup] = useState<any>(null);
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'item-asc' | 'item-desc'>('date-desc');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'received' | 'cancelled'>('all');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
