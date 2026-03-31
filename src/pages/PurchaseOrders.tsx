@@ -120,9 +120,13 @@ const PurchaseOrders = () => {
     }
   });
 
+  const searchLower = searchQuery.toLowerCase();
   const filteredOrders = orders?.filter(order => 
     (activeStore === 'All' || order.store === activeStore) &&
-    (statusFilter === 'all' || order.status === statusFilter)
+    (statusFilter === 'all' || order.status === statusFilter) &&
+    (searchQuery === '' || 
+      (order.invoice_number || '').toLowerCase().includes(searchLower) ||
+      (order.products?.name || '').toLowerCase().includes(searchLower))
   );
 
   // Sort helper
