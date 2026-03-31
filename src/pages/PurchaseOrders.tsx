@@ -9,7 +9,13 @@ import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialo
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
 import { ChangeStatusDialog } from '@/components/ChangeStatusDialog';
-import { Plus, Package, Pencil, Trash2, FileText, Eye } from 'lucide-react';
+import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,6 +43,7 @@ const PurchaseOrders = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedStatusGroup, setSelectedStatusGroup] = useState<any>(null);
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'item-asc' | 'item-desc'>('date-desc');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -110,10 +117,33 @@ const PurchaseOrders = () => {
     }
   });
 
-  // For store-specific tabs, filter normally
   const filteredOrders = orders?.filter(order => 
     activeStore === 'All' || order.store === activeStore
   );
+
+  // Sort helper
+  const sortOrders = (items: any[]) => {
+    return [...items].sort((a, b) => {
+      switch (sortBy) {
+        case 'date-asc':
+          return new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime() - new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime();
+        case 'date-desc':
+          return new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime() - new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime();
+        case 'item-asc': {
+          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
+          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        }
+        case 'item-desc': {
+          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
+          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
+          return nameB.localeCompare(nameA);
+        }
+        default:
+          return 0;
+      }
+    });
+  };
 
   // For "All" tab, group orders by invoice number to show consolidated view
   const groupedByInvoice = activeStore === 'All' && orders 
@@ -144,7 +174,8 @@ const PurchaseOrders = () => {
       }, {} as Record<string, any>)
     : {};
 
-  const groupedInvoices = Object.values(groupedByInvoice);
+  const groupedInvoices = sortOrders(Object.values(groupedByInvoice));
+  const sortedFilteredOrders = filteredOrders ? sortOrders(filteredOrders) : [];
 
   const handleEdit = (order: any) => {
     setSelectedOrder(order);
@@ -247,6 +278,20 @@ const PurchaseOrders = () => {
                 <Package className="h-5 w-5 text-primary" />
                 <CardTitle>All Purchase Orders</CardTitle>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ArrowUpDown className="mr-2 h-4 w-4" />
+                    Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <CardDescription>View all your purchase orders with supplier details</CardDescription>
           </CardHeader>
@@ -263,7 +308,7 @@ const PurchaseOrders = () => {
 
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
-            ) : (activeStore === 'All' ? groupedInvoices.length === 0 : !filteredOrders || filteredOrders.length === 0) ? (
+            ) : (activeStore === 'All' ? groupedInvoices.length === 0 : sortedFilteredOrders.length === 0) ? (
               <div className="text-center py-8 text-muted-foreground">
                 No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
@@ -368,7 +413,7 @@ const PurchaseOrders = () => {
                       ))
                     ) : (
                       // Individual view for store-specific tabs
-                      filteredOrders.map((order: any) => (
+                      sortedFilteredOrders.map((order: any) => (
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">
                             <Button
