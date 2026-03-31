@@ -9,7 +9,7 @@ import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialo
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
 import { ChangeStatusDialog } from '@/components/ChangeStatusDialog';
-import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown } from 'lucide-react';
+import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
