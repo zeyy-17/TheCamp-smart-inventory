@@ -43,7 +43,7 @@ const PurchaseOrders = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedStatusGroup, setSelectedStatusGroup] = useState<any>(null);
-  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'item-asc' | 'item-desc'>('date-desc');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc'>('date-desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'received' | 'cancelled'>('all');
 
   const { data: orders, isLoading } = useQuery({
@@ -126,24 +126,9 @@ const PurchaseOrders = () => {
   // Sort helper
   const sortOrders = (items: any[]) => {
     return [...items].sort((a, b) => {
-      switch (sortBy) {
-        case 'date-asc':
-          return new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime() - new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime();
-        case 'date-desc':
-          return new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime() - new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime();
-        case 'item-asc': {
-          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
-          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
-          return nameA.localeCompare(nameB);
-        }
-        case 'item-desc': {
-          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
-          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
-          return nameB.localeCompare(nameA);
-        }
-        default:
-          return 0;
-      }
+      const dateA = new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime();
+      const dateB = new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime();
+      return sortBy === 'date-asc' ? dateA - dateB : dateB - dateA;
     });
   };
 
@@ -299,14 +284,12 @@ const PurchaseOrders = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm">
                       <ArrowUpDown className="mr-2 h-4 w-4" />
-                      Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
+                      Sort: {sortBy === 'date-desc' ? 'Newest First' : 'Oldest First'}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
