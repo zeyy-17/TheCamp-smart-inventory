@@ -9,7 +9,7 @@ import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialo
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
 import { ChangeStatusDialog } from '@/components/ChangeStatusDialog';
-import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown } from 'lucide-react';
+import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +44,7 @@ const PurchaseOrders = () => {
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedStatusGroup, setSelectedStatusGroup] = useState<any>(null);
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'item-asc' | 'item-desc'>('date-desc');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'received' | 'cancelled'>('all');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -118,7 +119,8 @@ const PurchaseOrders = () => {
   });
 
   const filteredOrders = orders?.filter(order => 
-    activeStore === 'All' || order.store === activeStore
+    (activeStore === 'All' || order.store === activeStore) &&
+    (statusFilter === 'all' || order.status === statusFilter)
   );
 
   // Sort helper
@@ -147,7 +149,7 @@ const PurchaseOrders = () => {
 
   // For "All" tab, group orders by invoice number to show consolidated view
   const groupedByInvoice = activeStore === 'All' && orders 
-    ? orders.reduce((acc, order) => {
+    ? orders.filter(o => statusFilter === 'all' || o.status === statusFilter).reduce((acc, order) => {
         const invoiceNum = order.invoice_number || `#${order.id}`;
         if (!acc[invoiceNum]) {
           acc[invoiceNum] = {
@@ -278,20 +280,36 @@ const PurchaseOrders = () => {
                 <Package className="h-5 w-5 text-primary" />
                 <CardTitle>All Purchase Orders</CardTitle>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <ArrowUpDown className="mr-2 h-4 w-4" />
-                    Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Filter className="mr-2 h-4 w-4" />
+                      Status: {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setStatusFilter('all')}>All</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('pending')}>Pending</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('received')}>Received</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('cancelled')}>Cancelled</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <ArrowUpDown className="mr-2 h-4 w-4" />
+                      Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             <CardDescription>View all your purchase orders with supplier details</CardDescription>
           </CardHeader>
