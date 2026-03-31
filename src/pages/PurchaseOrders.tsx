@@ -280,20 +280,36 @@ const PurchaseOrders = () => {
                 <Package className="h-5 w-5 text-primary" />
                 <CardTitle>All Purchase Orders</CardTitle>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <ArrowUpDown className="mr-2 h-4 w-4" />
-                    Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Filter className="mr-2 h-4 w-4" />
+                      Status: {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setStatusFilter('all')}>All</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('pending')}>Pending</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('received')}>Received</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatusFilter('cancelled')}>Cancelled</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <ArrowUpDown className="mr-2 h-4 w-4" />
+                      Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
             <CardDescription>View all your purchase orders with supplier details</CardDescription>
           </CardHeader>
