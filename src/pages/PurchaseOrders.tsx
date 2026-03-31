@@ -140,7 +140,12 @@ const PurchaseOrders = () => {
 
   // For "All" tab, group orders by invoice number to show consolidated view
   const groupedByInvoice = activeStore === 'All' && orders 
-    ? orders.filter(o => statusFilter === 'all' || o.status === statusFilter).reduce((acc, order) => {
+    ? orders.filter(o => 
+        (statusFilter === 'all' || o.status === statusFilter) &&
+        (searchQuery === '' || 
+          (o.invoice_number || '').toLowerCase().includes(searchLower) ||
+          (o.products?.name || '').toLowerCase().includes(searchLower))
+      ).reduce((acc, order) => {
         const invoiceNum = order.invoice_number || `#${order.id}`;
         if (!acc[invoiceNum]) {
           acc[invoiceNum] = {
