@@ -43,7 +43,7 @@ const PurchaseOrders = () => {
   const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedStatusGroup, setSelectedStatusGroup] = useState<any>(null);
-  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'item-asc' | 'item-desc'>('date-desc');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc'>('date-desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'received' | 'cancelled'>('all');
 
   const { data: orders, isLoading } = useQuery({
