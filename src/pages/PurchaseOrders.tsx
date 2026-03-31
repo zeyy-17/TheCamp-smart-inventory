@@ -119,7 +119,8 @@ const PurchaseOrders = () => {
   });
 
   const filteredOrders = orders?.filter(order => 
-    activeStore === 'All' || order.store === activeStore
+    (activeStore === 'All' || order.store === activeStore) &&
+    (statusFilter === 'all' || order.status === statusFilter)
   );
 
   // Sort helper
