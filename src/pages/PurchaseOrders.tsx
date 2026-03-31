@@ -126,23 +126,9 @@ const PurchaseOrders = () => {
   // Sort helper
   const sortOrders = (items: any[]) => {
     return [...items].sort((a, b) => {
-      switch (sortBy) {
-        case 'date-asc':
-          return new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime() - new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime();
-        case 'date-desc':
-          return new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime() - new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime();
-        case 'item-asc': {
-          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
-          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
-          return nameA.localeCompare(nameB);
-        }
-        case 'item-desc': {
-          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
-          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
-          return nameB.localeCompare(nameA);
-        }
-        default:
-          return 0;
+      const dateA = new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime();
+      const dateB = new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime();
+      return sortBy === 'date-asc' ? dateA - dateB : dateB - dateA;
       }
     });
   };
