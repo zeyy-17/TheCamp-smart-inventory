@@ -284,14 +284,12 @@ const PurchaseOrders = () => {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm">
                       <ArrowUpDown className="mr-2 h-4 w-4" />
-                      Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
+                      Sort: {sortBy === 'date-desc' ? 'Newest First' : 'Oldest First'}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
