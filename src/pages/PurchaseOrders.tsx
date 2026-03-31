@@ -129,7 +129,6 @@ const PurchaseOrders = () => {
       const dateA = new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime();
       const dateB = new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime();
       return sortBy === 'date-asc' ? dateA - dateB : dateB - dateA;
-      }
     });
   };
 
