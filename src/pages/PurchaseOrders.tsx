@@ -278,8 +278,20 @@ const PurchaseOrders = () => {
                 <Package className="h-5 w-5 text-primary" />
                 <CardTitle>All Purchase Orders</CardTitle>
               </div>
-            </div>
-            <CardDescription>View all your purchase orders with supplier details</CardDescription>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <ArrowUpDown className="mr-2 h-4 w-4" />
+                    Sort: {sortBy === 'date-desc' ? 'Newest First' : sortBy === 'date-asc' ? 'Oldest First' : sortBy === 'item-asc' ? 'Item A-Z' : 'Item Z-A'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortBy('date-desc')}>Date: Newest First</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('date-asc')}>Date: Oldest First</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('item-asc')}>Item: A → Z</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
           </CardHeader>
           <CardContent>
             <Tabs value={activeStore} onValueChange={setActiveStore} className="mb-4">
