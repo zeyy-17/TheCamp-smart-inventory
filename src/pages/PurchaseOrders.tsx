@@ -292,6 +292,8 @@ const PurchaseOrders = () => {
                   <DropdownMenuItem onClick={() => setSortBy('item-desc')}>Item: Z → A</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+            </div>
+            <CardDescription>View all your purchase orders with supplier details</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs value={activeStore} onValueChange={setActiveStore} className="mb-4">
