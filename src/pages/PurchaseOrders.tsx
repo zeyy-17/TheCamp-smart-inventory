@@ -413,7 +413,7 @@ const PurchaseOrders = () => {
                       ))
                     ) : (
                       // Individual view for store-specific tabs
-                      filteredOrders.map((order: any) => (
+                      sortedFilteredOrders.map((order: any) => (
                         <TableRow key={order.id}>
                           <TableCell className="font-medium">
                             <Button
