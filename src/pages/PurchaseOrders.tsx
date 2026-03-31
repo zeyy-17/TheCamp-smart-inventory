@@ -308,7 +308,7 @@ const PurchaseOrders = () => {
 
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading orders...</div>
-            ) : (activeStore === 'All' ? groupedInvoices.length === 0 : !filteredOrders || filteredOrders.length === 0) ? (
+            ) : (activeStore === 'All' ? groupedInvoices.length === 0 : sortedFilteredOrders.length === 0) ? (
               <div className="text-center py-8 text-muted-foreground">
                 No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
