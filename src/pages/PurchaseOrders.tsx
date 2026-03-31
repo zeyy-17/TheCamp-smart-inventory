@@ -9,7 +9,8 @@ import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialo
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
 import { ChangeStatusDialog } from '@/components/ChangeStatusDialog';
-import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter } from 'lucide-react';
+import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter, Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +46,7 @@ const PurchaseOrders = () => {
   const [selectedStatusGroup, setSelectedStatusGroup] = useState<any>(null);
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc'>('date-desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'received' | 'cancelled'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -118,9 +120,13 @@ const PurchaseOrders = () => {
     }
   });
 
+  const searchLower = searchQuery.toLowerCase();
   const filteredOrders = orders?.filter(order => 
     (activeStore === 'All' || order.store === activeStore) &&
-    (statusFilter === 'all' || order.status === statusFilter)
+    (statusFilter === 'all' || order.status === statusFilter) &&
+    (searchQuery === '' || 
+      (order.invoice_number || '').toLowerCase().includes(searchLower) ||
+      (order.products?.name || '').toLowerCase().includes(searchLower))
   );
 
   // Sort helper
@@ -134,7 +140,12 @@ const PurchaseOrders = () => {
 
   // For "All" tab, group orders by invoice number to show consolidated view
   const groupedByInvoice = activeStore === 'All' && orders 
-    ? orders.filter(o => statusFilter === 'all' || o.status === statusFilter).reduce((acc, order) => {
+    ? orders.filter(o => 
+        (statusFilter === 'all' || o.status === statusFilter) &&
+        (searchQuery === '' || 
+          (o.invoice_number || '').toLowerCase().includes(searchLower) ||
+          (o.products?.name || '').toLowerCase().includes(searchLower))
+      ).reduce((acc, order) => {
         const invoiceNum = order.invoice_number || `#${order.id}`;
         if (!acc[invoiceNum]) {
           acc[invoiceNum] = {
@@ -256,6 +267,16 @@ const PurchaseOrders = () => {
             <Plus className="mr-2 h-4 w-4" />
             Create Order
           </Button>
+        </div>
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by PO # or product name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
         </div>
 
         <Card>
