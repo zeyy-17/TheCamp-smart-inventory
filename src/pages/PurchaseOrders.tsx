@@ -117,10 +117,33 @@ const PurchaseOrders = () => {
     }
   });
 
-  // For store-specific tabs, filter normally
   const filteredOrders = orders?.filter(order => 
     activeStore === 'All' || order.store === activeStore
   );
+
+  // Sort helper
+  const sortOrders = (items: any[]) => {
+    return [...items].sort((a, b) => {
+      switch (sortBy) {
+        case 'date-asc':
+          return new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime() - new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime();
+        case 'date-desc':
+          return new Date(b.expected_delivery_date || b.expectedDeliveryDate).getTime() - new Date(a.expected_delivery_date || a.expectedDeliveryDate).getTime();
+        case 'item-asc': {
+          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
+          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        }
+        case 'item-desc': {
+          const nameA = (a.products?.name || a.products?.[0]?.name || a.invoiceNumber || '').toLowerCase();
+          const nameB = (b.products?.name || b.products?.[0]?.name || b.invoiceNumber || '').toLowerCase();
+          return nameB.localeCompare(nameA);
+        }
+        default:
+          return 0;
+      }
+    });
+  };
 
   // For "All" tab, group orders by invoice number to show consolidated view
   const groupedByInvoice = activeStore === 'All' && orders 
@@ -151,7 +174,8 @@ const PurchaseOrders = () => {
       }, {} as Record<string, any>)
     : {};
 
-  const groupedInvoices = Object.values(groupedByInvoice);
+  const groupedInvoices = sortOrders(Object.values(groupedByInvoice));
+  const sortedFilteredOrders = filteredOrders ? sortOrders(filteredOrders) : [];
 
   const handleEdit = (order: any) => {
     setSelectedOrder(order);
