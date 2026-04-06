@@ -4,12 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
 import { ChangeStatusDialog } from '@/components/ChangeStatusDialog';
-import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter, Search } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter, Search, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -47,6 +47,7 @@ const PurchaseOrders = () => {
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc'>('date-desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'received' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
@@ -255,6 +256,15 @@ const PurchaseOrders = () => {
     }
   };
 
+  const toggleItem = (key: string) => {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   return (
     <main className="flex-1 overflow-y-auto p-8">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -335,188 +345,161 @@ const PurchaseOrders = () => {
                 No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>PO #</TableHead>
-                      <TableHead>Store(s)</TableHead>
-                      <TableHead>Products</TableHead>
-                      <TableHead>Supplier</TableHead>
-                      <TableHead>Contact</TableHead>
-                      <TableHead>Expected Delivery</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Notes</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {activeStore === 'All' ? (
-                      // Grouped view for "All" tab - shows invoice with all stores
-                      groupedInvoices.map((group: any) => (
-                        <TableRow key={group.invoiceNumber}>
-                          <TableCell className="font-medium">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
-                              onClick={() => handleViewInvoice(group.invoiceNumber)}
-                            >
-                              <FileText className="h-3 w-3 text-muted-foreground" />
-                              {group.invoiceNumber}
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {Array.from(group.stores).map((store: string) => (
-                                <Badge key={store} variant={getStoreColor(store)}>
-                                  {store}
-                                </Badge>
-                              ))}
+              <div className="space-y-2">
+                {activeStore === 'All' ? (
+                  groupedInvoices.map((group: any) => {
+                    const key = `group-${group.invoiceNumber}`;
+                    return (
+                      <Collapsible key={key} open={openItems.has(key)} onOpenChange={() => toggleItem(key)}>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="outline" className="w-full justify-between h-auto py-3 px-4 text-left">
+                            <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <FileText className="h-4 w-4 text-primary shrink-0" />
+                                <span className="font-semibold text-sm">{group.invoiceNumber}</span>
+                                <Badge variant={getStatusColor(group.status)} className="text-xs">{group.status}</Badge>
+                                {Array.from(group.stores).map((store: string) => (
+                                  <Badge key={store} variant={getStoreColor(store)} className="text-xs">{store}</Badge>
+                                ))}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {group.supplier?.name || 'N/A'} • {format(new Date(group.expectedDeliveryDate), 'MMM dd, yyyy')} • {group.products.length} item{group.products.length !== 1 ? 's' : ''}
+                              </span>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1 max-w-xs">
-                              {group.products.map((product: any, idx: number) => (
-                                <div key={idx} className="text-sm">
-                                  <span className="font-medium">{product.name}</span>
-                                  <span className="text-muted-foreground"> ({product.sku})</span>
-                                  <span className="text-muted-foreground"> × {product.quantity}</span>
-                                  <Badge variant="outline" className="ml-1 text-xs">{product.store}</Badge>
-                                </div>
-                              ))}
+                            <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${openItems.has(key) ? "rotate-180" : ""}`} />
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="border border-t-0 rounded-b-lg overflow-hidden mb-1">
+                            <div className="bg-muted/50 px-4 py-2 flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                              <span>Supplier: {group.supplier?.name || 'N/A'}</span>
+                              {group.supplier?.contact_email && <span>Email: {group.supplier.contact_email}</span>}
+                              {group.supplier?.contact_phone && <span>Phone: {group.supplier.contact_phone}</span>}
+                              <span>Delivery: {format(new Date(group.expectedDeliveryDate), 'MMM dd, yyyy')}</span>
                             </div>
-                          </TableCell>
-                          <TableCell>{group.supplier?.name || 'N/A'}</TableCell>
-                          <TableCell className="text-sm">
-                            {group.supplier?.contact_email && (
-                              <div>{group.supplier.contact_email}</div>
+                            <table className="w-full text-sm">
+                              <thead className="bg-muted/30">
+                                <tr>
+                                  <th className="text-left p-2 font-medium">Product</th>
+                                  <th className="text-center p-2 font-medium">Store</th>
+                                  <th className="text-center p-2 font-medium">Qty</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {group.products.map((product: any, idx: number) => (
+                                  <tr key={idx} className="border-t border-border">
+                                    <td className="p-2">
+                                      <div className="font-medium">{product.name}</div>
+                                      <div className="text-xs text-muted-foreground">{product.sku}</div>
+                                    </td>
+                                    <td className="text-center p-2">
+                                      <Badge variant="outline" className="text-xs">{product.store}</Badge>
+                                    </td>
+                                    <td className="text-center p-2 font-medium">{product.quantity}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {group.notes && (
+                              <div className="px-4 py-2 bg-muted/20 text-xs text-muted-foreground border-t">
+                                <span className="font-medium">Notes:</span> {group.notes}
+                              </div>
                             )}
-                            {group.supplier?.contact_phone && (
-                              <div className="text-muted-foreground">{group.supplier.contact_phone}</div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(group.expectedDeliveryDate), 'MMM dd, yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={getStatusColor(group.status)}
-                              className={group.status === 'pending' ? "cursor-pointer hover:opacity-80 transition-opacity" : ""}
-                              onClick={() => {
-                                if (group.status === 'received' || group.status === 'cancelled') return;
-                                setSelectedStatusGroup({
-                                  invoiceNumber: group.invoiceNumber,
-                                  status: group.status,
-                                  orders: group.orders,
-                                });
-                                setStatusDialogOpen(true);
-                              }}
-                            >
-                              {group.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                            {group.notes || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewInvoice(group.invoiceNumber)}
-                                title="View Invoice"
-                              >
-                                <Eye className="h-4 w-4" />
+                            <div className="px-4 py-2 flex justify-end gap-1 border-t">
+                              <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(group.invoiceNumber)} title="View Invoice">
+                                <Eye className="h-4 w-4 mr-1" /> View Invoice
                               </Button>
+                              {group.status === 'pending' && (
+                                <Button variant="ghost" size="sm" onClick={() => {
+                                  setSelectedStatusGroup({
+                                    invoiceNumber: group.invoiceNumber,
+                                    status: group.status,
+                                    orders: group.orders,
+                                  });
+                                  setStatusDialogOpen(true);
+                                }}>
+                                  Change Status
+                                </Button>
+                              )}
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      // Individual view for store-specific tabs
-                      sortedFilteredOrders.map((order: any) => (
-                        <TableRow key={order.id}>
-                          <TableCell className="font-medium">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="flex items-center gap-1 p-0 h-auto font-medium hover:text-primary"
-                              onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
-                            >
-                              <FileText className="h-3 w-3 text-muted-foreground" />
-                              {order.invoice_number || `#${order.id}`}
-                            </Button>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getStoreColor(order.store)}>
-                              {order.store || 'N/A'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="text-sm">
-                              <span className="font-medium">{order.products?.name || 'N/A'}</span>
-                              <span className="text-muted-foreground"> ({order.products?.sku || 'N/A'})</span>
-                              <span className="text-muted-foreground"> × {order.quantity}</span>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })
+                ) : (
+                  sortedFilteredOrders.map((order: any) => {
+                    const key = `order-${order.id}`;
+                    const invoiceNum = order.invoice_number || `#${order.id}`;
+                    return (
+                      <Collapsible key={key} open={openItems.has(key)} onOpenChange={() => toggleItem(key)}>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="outline" className="w-full justify-between h-auto py-3 px-4 text-left">
+                            <div className="flex flex-col items-start gap-0.5 min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <FileText className="h-4 w-4 text-primary shrink-0" />
+                                <span className="font-semibold text-sm">{invoiceNum}</span>
+                                <Badge variant={getStatusColor(order.status)} className="text-xs">{order.status}</Badge>
+                                <Badge variant={getStoreColor(order.store)} className="text-xs">{order.store || 'N/A'}</Badge>
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {order.products?.name || 'N/A'} × {order.quantity} • {order.suppliers?.name || 'N/A'} • {format(new Date(order.expected_delivery_date), 'MMM dd, yyyy')}
+                              </span>
                             </div>
-                          </TableCell>
-                          <TableCell>{order.suppliers?.name || 'N/A'}</TableCell>
-                          <TableCell className="text-sm">
-                            {order.suppliers?.contact_email && (
-                              <div>{order.suppliers.contact_email}</div>
+                            <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${openItems.has(key) ? "rotate-180" : ""}`} />
+                          </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="border border-t-0 rounded-b-lg overflow-hidden mb-1">
+                            <div className="bg-muted/50 px-4 py-2 space-y-1 text-xs text-muted-foreground">
+                              <div className="flex justify-between"><span>Supplier:</span><span className="font-medium text-foreground">{order.suppliers?.name || 'N/A'}</span></div>
+                              {order.suppliers?.contact_email && <div className="flex justify-between"><span>Email:</span><span>{order.suppliers.contact_email}</span></div>}
+                              {order.suppliers?.contact_phone && <div className="flex justify-between"><span>Phone:</span><span>{order.suppliers.contact_phone}</span></div>}
+                              <div className="flex justify-between"><span>Expected Delivery:</span><span className="font-medium text-foreground">{format(new Date(order.expected_delivery_date), 'MMM dd, yyyy')}</span></div>
+                            </div>
+                            <table className="w-full text-sm">
+                              <thead className="bg-muted/30">
+                                <tr>
+                                  <th className="text-left p-2 font-medium">Product</th>
+                                  <th className="text-center p-2 font-medium">Qty</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr className="border-t border-border">
+                                  <td className="p-2">
+                                    <div className="font-medium">{order.products?.name || 'N/A'}</div>
+                                    <div className="text-xs text-muted-foreground">{order.products?.sku || 'N/A'}</div>
+                                  </td>
+                                  <td className="text-center p-2 font-medium">{order.quantity}</td>
+                                </tr>
+                              </tbody>
+                            </table>
+                            {order.notes && (
+                              <div className="px-4 py-2 bg-muted/20 text-xs text-muted-foreground border-t">
+                                <span className="font-medium">Notes:</span> {order.notes}
+                              </div>
                             )}
-                            {order.suppliers?.contact_phone && (
-                              <div className="text-muted-foreground">{order.suppliers.contact_phone}</div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {format(new Date(order.expected_delivery_date), 'MMM dd, yyyy')}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={getStatusColor(order.status)}>
-                              {order.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground max-w-xs truncate">
-                            {order.notes || '-'}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleViewInvoice(order.invoice_number || `#${order.id}`)}
-                                title="View Invoice"
-                              >
-                                <Eye className="h-4 w-4" />
+                            <div className="px-4 py-2 flex justify-end gap-1 border-t">
+                              <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(invoiceNum)}>
+                                <Eye className="h-4 w-4 mr-1" /> View Invoice
                               </Button>
                               {order.status === 'pending' && (
                                 <>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEdit(order)}
-                                    title="Edit"
-                                  >
-                                    <Pencil className="h-4 w-4" />
+                                  <Button variant="ghost" size="sm" onClick={() => handleEdit(order)}>
+                                    <Pencil className="h-4 w-4 mr-1" /> Edit
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleDeleteClick(order)}
-                                    title="Delete"
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(order)}>
+                                    <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
                                   </Button>
                                 </>
                               )}
                             </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })
+                )}
               </div>
             )}
           </CardContent>
