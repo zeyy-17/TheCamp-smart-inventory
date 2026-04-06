@@ -37,7 +37,7 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
 
   const filteredProducts = products.filter(
     (p) =>
-      (selectedCategory === "All" || p.category?.name === selectedCategory) &&
+      (selectedCategory === "" || p.category?.name === selectedCategory) &&
       (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.sku || "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
