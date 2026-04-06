@@ -24,7 +24,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
     supplier_id: "",
     cost_price: "",
     retail_price: "",
-    quantity: "",
+    
     reorder_level: "",
   });
   const queryClient = useQueryClient();
@@ -48,7 +48,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
         supplier_id: product.supplier_id?.toString() || "",
         cost_price: product.cost_price?.toString() || "",
         retail_price: product.retail_price?.toString() || "",
-        quantity: product.quantity?.toString() || "",
+        
         reorder_level: product.reorder_level?.toString() || "",
       });
     }
@@ -103,7 +103,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
       sku: formData.sku.trim(),
       cost_price: parseFloat(formData.cost_price) || 0,
       retail_price: parseFloat(formData.retail_price) || 0,
-      quantity: parseInt(formData.quantity) || 0,
+      
       reorder_level: parseInt(formData.reorder_level) || 0,
     };
 
@@ -214,30 +214,16 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-quantity">Quantity*</Label>
-              <Input
-                id="edit-quantity"
-                type="number"
-                min="0"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-reorder_level">Reorder Level*</Label>
-              <Input
-                id="edit-reorder_level"
-                type="number"
-                min="0"
-                value={formData.reorder_level}
-                onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
-                required
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="edit-reorder_level">Reorder Level*</Label>
+            <Input
+              id="edit-reorder_level"
+              type="number"
+              min="0"
+              value={formData.reorder_level}
+              onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
+              required
+            />
           </div>
 
           <DialogFooter>
