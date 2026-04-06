@@ -18,7 +18,10 @@ interface StockCountDialogProps {
 export const StockCountDialog = ({ open, onOpenChange, products, storeName }: StockCountDialogProps) => {
   const [quantities, setQuantities] = useState<Record<number, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
   const queryClient = useQueryClient();
+
+  const categoryNames = ["All", ...Array.from(new Set(products.map((p: any) => p.category?.name).filter(Boolean)))];
 
   useEffect(() => {
     if (open) {
@@ -28,13 +31,15 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
       });
       setQuantities(initial);
       setSearchQuery("");
+      setSelectedCategory("All");
     }
   }, [open, products]);
 
   const filteredProducts = products.filter(
     (p) =>
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.sku || "").toLowerCase().includes(searchQuery.toLowerCase())
+      (selectedCategory === "All" || p.category?.name === selectedCategory) &&
+      (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.sku || "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const getChangedProducts = () => {
