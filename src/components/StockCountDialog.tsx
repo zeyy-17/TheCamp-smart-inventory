@@ -18,7 +18,7 @@ interface StockCountDialogProps {
 export const StockCountDialog = ({ open, onOpenChange, products, storeName }: StockCountDialogProps) => {
   const [quantities, setQuantities] = useState<Record<number, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const queryClient = useQueryClient();
 
   const categoryNames = Array.from(new Set(products.map((p: any) => p.category?.name).filter(Boolean)));
