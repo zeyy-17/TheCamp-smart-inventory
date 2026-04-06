@@ -360,7 +360,7 @@ const Insights = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold text-foreground">{getSectionTitle()}</h2>
-              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">
+              <Badge variant="secondary" className="text-xs bg-primary text-primary-foreground border-primary">
                 <Zap className="w-3 h-3 mr-1" />
                 AI-Detected
               </Badge>
