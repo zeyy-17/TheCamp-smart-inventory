@@ -214,15 +214,14 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-quantity">Quantity*</Label>
+          <div className="space-y-2">
+              <Label htmlFor="edit-reorder_level">Reorder Level*</Label>
               <Input
-                id="edit-quantity"
+                id="edit-reorder_level"
                 type="number"
                 min="0"
-                value={formData.quantity}
-                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                value={formData.reorder_level}
+                onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
                 required
               />
             </div>
