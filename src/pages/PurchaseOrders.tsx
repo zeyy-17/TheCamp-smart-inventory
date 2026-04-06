@@ -4,12 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { CreatePurchaseOrderDialog } from '@/components/CreatePurchaseOrderDialog';
 import { EditPurchaseOrderDialog } from '@/components/EditPurchaseOrderDialog';
 import { PurchaseOrderInvoice } from '@/components/PurchaseOrderInvoice';
 import { ChangeStatusDialog } from '@/components/ChangeStatusDialog';
-import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter, Search } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Package, Pencil, Trash2, FileText, Eye, ArrowUpDown, Filter, Search, ChevronDown } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
