@@ -90,6 +90,7 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
       toast.success(`Stock count updated for ${count} product${count > 1 ? "s" : ""}`);
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["products-stock-by-store"] });
+      queryClient.invalidateQueries({ queryKey: ["stock-count-logs"] });
       onOpenChange(false);
     },
     onError: (error: any) => {
