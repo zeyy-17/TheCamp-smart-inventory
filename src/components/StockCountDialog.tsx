@@ -101,7 +101,7 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
               key={cat}
               variant={selectedCategory === cat ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategory(selectedCategory === cat ? "" : cat)}
               className="text-xs"
             >
               {cat}
