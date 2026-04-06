@@ -95,6 +95,20 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
           />
         </div>
 
+        <div className="flex flex-wrap gap-2 mb-3">
+          {categoryNames.map((cat) => (
+            <Button
+              key={cat}
+              variant={selectedCategory === cat ? "default" : "outline"}
+              size="sm"
+              onClick={() => setSelectedCategory(cat)}
+              className="text-xs"
+            >
+              {cat}
+            </Button>
+          ))}
+        </div>
+
         <ScrollArea className="flex-1 max-h-[50vh] border rounded-lg">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 sticky top-0">
