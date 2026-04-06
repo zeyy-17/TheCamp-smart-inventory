@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
 import { StockCountDialog } from "@/components/StockCountDialog";
+import { StockCountHistoryDialog } from "@/components/StockCountHistoryDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { categoriesApi } from "@/lib/api";
