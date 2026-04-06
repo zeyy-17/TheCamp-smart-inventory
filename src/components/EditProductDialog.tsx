@@ -103,7 +103,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
       sku: formData.sku.trim(),
       cost_price: parseFloat(formData.cost_price) || 0,
       retail_price: parseFloat(formData.retail_price) || 0,
-      quantity: parseInt(formData.quantity) || 0,
+      
       reorder_level: parseInt(formData.reorder_level) || 0,
     };
 
