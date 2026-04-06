@@ -47,6 +47,7 @@ const PurchaseOrders = () => {
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc'>('date-desc');
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'received' | 'cancelled'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [openItems, setOpenItems] = useState<Set<string>>(new Set());
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['purchase-orders'],
