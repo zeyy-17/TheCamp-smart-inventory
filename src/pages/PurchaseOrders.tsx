@@ -256,6 +256,15 @@ const PurchaseOrders = () => {
     }
   };
 
+  const toggleItem = (key: string) => {
+    setOpenItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
   return (
     <main className="flex-1 overflow-y-auto p-8">
       <div className="max-w-7xl mx-auto space-y-6">
