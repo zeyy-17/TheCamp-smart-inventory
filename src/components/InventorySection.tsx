@@ -28,6 +28,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [stockCountDialogOpen, setStockCountDialogOpen] = useState(false);
+  const [stockCountHistoryOpen, setStockCountHistoryOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
