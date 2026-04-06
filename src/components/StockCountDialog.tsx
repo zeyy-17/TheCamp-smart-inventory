@@ -21,6 +21,7 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const categoryNames = Array.from(new Set(products.map((p: any) => p.category?.name).filter(Boolean)));
 
