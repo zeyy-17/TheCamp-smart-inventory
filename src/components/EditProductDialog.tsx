@@ -48,7 +48,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
         supplier_id: product.supplier_id?.toString() || "",
         cost_price: product.cost_price?.toString() || "",
         retail_price: product.retail_price?.toString() || "",
-        quantity: product.quantity?.toString() || "",
+        
         reorder_level: product.reorder_level?.toString() || "",
       });
     }
