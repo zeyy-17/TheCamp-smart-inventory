@@ -1,11 +1,12 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Button } from "./ui/button";
-import { Separator } from "./ui/separator";
 import { ScrollArea } from "./ui/scroll-area";
-import { History, Printer } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
+import { History, Printer, ChevronDown } from "lucide-react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 interface StockCountHistoryDialogProps {
   open: boolean;
@@ -33,6 +34,8 @@ interface GroupedBatch {
 }
 
 export const StockCountHistoryDialog = ({ open, onOpenChange, storeName }: StockCountHistoryDialogProps) => {
+  const [openBatches, setOpenBatches] = useState<Set<string>>(new Set());
+
   const { data: logs = [], isLoading } = useQuery<LogEntry[]>({
     queryKey: ['stock-count-logs', storeName],
     queryFn: async () => {
@@ -52,7 +55,6 @@ export const StockCountHistoryDialog = ({ open, onOpenChange, storeName }: Stock
     enabled: open,
   });
 
-  // Group logs by batch_id
   const groupedBatches: GroupedBatch[] = [];
   const batchMap = new Map<string, GroupedBatch>();
 
@@ -70,8 +72,13 @@ export const StockCountHistoryDialog = ({ open, onOpenChange, storeName }: Stock
     batchMap.get(log.batch_id)!.items.push(log);
   });
 
-  const handlePrint = () => {
-    window.print();
+  const toggleBatch = (batchId: string) => {
+    setOpenBatches((prev) => {
+      const next = new Set(prev);
+      if (next.has(batchId)) next.delete(batchId);
+      else next.add(batchId);
+      return next;
+    });
   };
 
   return (
@@ -90,66 +97,73 @@ export const StockCountHistoryDialog = ({ open, onOpenChange, storeName }: Stock
           ) : groupedBatches.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">No stock count history found</div>
           ) : (
-            <div className="space-y-6 pr-4">
-              {groupedBatches.map((batch) => (
-                <div key={batch.batch_id} className="space-y-3 print:text-black">
-                  {/* Batch Header */}
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Date:</span>
-                      <span className="font-semibold text-sm">{format(new Date(batch.date), "MMM dd, yyyy — h:mm a")}</span>
+            <div className="space-y-2 pr-4">
+              {groupedBatches.map((batch, index) => (
+                <Collapsible
+                  key={batch.batch_id}
+                  open={openBatches.has(batch.batch_id)}
+                  onOpenChange={() => toggleBatch(batch.batch_id)}
+                >
+                  <CollapsibleTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between h-auto py-3 px-4 text-left"
+                    >
+                      <div className="flex flex-col items-start gap-0.5">
+                        <span className="font-semibold text-sm">
+                          Transaction #{groupedBatches.length - index}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(batch.date), "MMM dd, yyyy — h:mm a")} • {batch.counted_by || "Unknown"} • {batch.items.length} item{batch.items.length !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${openBatches.has(batch.batch_id) ? "rotate-180" : ""}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="border border-t-0 rounded-b-lg overflow-hidden mb-1">
+                      <div className="bg-muted/50 px-4 py-2 flex justify-between text-xs text-muted-foreground">
+                        <span>Counted by: {batch.counted_by || "Unknown"}</span>
+                        <span>{format(new Date(batch.date), "MMM dd, yyyy — h:mm a")}</span>
+                      </div>
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/30">
+                          <tr>
+                            <th className="text-left p-2 font-medium">Product</th>
+                            <th className="text-center p-2 font-medium">Old Qty</th>
+                            <th className="text-center p-2 font-medium">New Qty</th>
+                            <th className="text-center p-2 font-medium">Diff</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {batch.items.map((item) => {
+                            const diff = item.new_quantity - item.old_quantity;
+                            return (
+                              <tr key={item.id} className="border-t border-border">
+                                <td className="p-2">
+                                  <div className="font-medium">{item.product_name}</div>
+                                  <div className="text-xs text-muted-foreground">{item.sku}</div>
+                                </td>
+                                <td className="text-center p-2 text-muted-foreground">{item.old_quantity}</td>
+                                <td className="text-center p-2 font-medium">{item.new_quantity}</td>
+                                <td className={`text-center p-2 font-semibold ${diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"}`}>
+                                  {diff > 0 ? `+${diff}` : diff}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Counted by:</span>
-                      <span className="font-medium text-sm">{batch.counted_by || "Unknown"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Items adjusted:</span>
-                      <span className="font-medium text-sm">{batch.items.length}</span>
-                    </div>
-                  </div>
-
-                  {/* Items Table */}
-                  <div className="border rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted/50">
-                        <tr>
-                          <th className="text-left p-2 font-medium">Product</th>
-                          <th className="text-center p-2 font-medium">Old Qty</th>
-                          <th className="text-center p-2 font-medium">New Qty</th>
-                          <th className="text-center p-2 font-medium">Difference</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {batch.items.map((item) => {
-                          const diff = item.new_quantity - item.old_quantity;
-                          return (
-                            <tr key={item.id} className="border-t">
-                              <td className="p-2">
-                                <div className="font-medium">{item.product_name}</div>
-                                <div className="text-xs text-muted-foreground">{item.sku}</div>
-                              </td>
-                              <td className="text-center p-2 text-muted-foreground">{item.old_quantity}</td>
-                              <td className="text-center p-2 font-medium">{item.new_quantity}</td>
-                              <td className={`text-center p-2 font-semibold ${diff > 0 ? "text-green-600" : diff < 0 ? "text-red-600" : "text-muted-foreground"}`}>
-                                {diff > 0 ? `+${diff}` : diff}
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <Separator />
-                </div>
+                  </CollapsibleContent>
+                </Collapsible>
               ))}
             </div>
           )}
         </ScrollArea>
 
         <DialogFooter className="print:hidden gap-2 mt-2">
-          <Button variant="outline" onClick={handlePrint}>
+          <Button variant="outline" onClick={() => window.print()}>
             <Printer className="h-4 w-4 mr-2" />
             Print
           </Button>
