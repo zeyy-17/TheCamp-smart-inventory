@@ -214,7 +214,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="w-1/2 space-y-2">
             <Label htmlFor="edit-reorder_level">Reorder Level*</Label>
             <Input
               id="edit-reorder_level"
