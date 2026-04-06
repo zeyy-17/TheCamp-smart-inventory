@@ -82,17 +82,27 @@ export const CreatePurchaseOrderDialog = ({ open, onOpenChange }: CreatePurchase
     items: InvoiceItem[];
   } | null>(null);
 
-  const { data: products } = useQuery({
+  const { data: allProducts } = useQuery({
     queryKey: ['products'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('products')
-        .select('id, name, sku, cost_price')
+        .select('id, name, sku, cost_price, store')
         .order('name');
       if (error) throw error;
       return data;
     }
   });
+
+  // Deduplicate products by name for the dropdown (pick first occurrence)
+  const products = allProducts
+    ? Object.values(
+        allProducts.reduce((acc, p) => {
+          if (!acc[p.name]) acc[p.name] = p;
+          return acc;
+        }, {} as Record<string, typeof allProducts[0]>)
+      )
+    : [];
 
   const { data: suppliers } = useQuery({
     queryKey: ['suppliers'],
