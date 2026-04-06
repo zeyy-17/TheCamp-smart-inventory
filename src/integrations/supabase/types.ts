@@ -300,6 +300,45 @@ export type Database = {
           },
         ]
       }
+      stock_count_logs: {
+        Row: {
+          batch_id: string
+          counted_by: string | null
+          created_at: string
+          id: number
+          new_quantity: number
+          old_quantity: number
+          product_id: number
+          product_name: string
+          sku: string
+          store: string
+        }
+        Insert: {
+          batch_id?: string
+          counted_by?: string | null
+          created_at?: string
+          id?: never
+          new_quantity: number
+          old_quantity: number
+          product_id: number
+          product_name: string
+          sku: string
+          store: string
+        }
+        Update: {
+          batch_id?: string
+          counted_by?: string | null
+          created_at?: string
+          id?: never
+          new_quantity?: number
+          old_quantity?: number
+          product_id?: number
+          product_name?: string
+          sku?: string
+          store?: string
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           contact_email: string | null

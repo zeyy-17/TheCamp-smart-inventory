@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
 import { ClipboardCheck } from "lucide-react";
 
 interface StockCountDialogProps {
@@ -20,6 +21,7 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const categoryNames = Array.from(new Set(products.map((p: any) => p.category?.name).filter(Boolean)));
 
@@ -54,6 +56,8 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
       const changed = getChangedProducts();
       if (changed.length === 0) throw new Error("No changes to save");
 
+      const batchId = crypto.randomUUID();
+
       for (const product of changed) {
         const newQty = parseInt(quantities[product.id] || "0", 10);
         const { error } = await supabase
@@ -62,12 +66,31 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
           .eq("id", product.id);
         if (error) throw error;
       }
+
+      // Log all changes
+      const logEntries = changed.map((product) => ({
+        batch_id: batchId,
+        product_id: product.id,
+        product_name: product.name,
+        sku: product.sku || '',
+        store: storeName,
+        old_quantity: product.quantity ?? 0,
+        new_quantity: parseInt(quantities[product.id] || "0", 10),
+        counted_by: user?.email || 'unknown',
+      }));
+
+      const { error: logError } = await supabase
+        .from("stock_count_logs")
+        .insert(logEntries);
+      if (logError) console.error("Failed to log stock count:", logError);
+
       return changed.length;
     },
     onSuccess: (count) => {
       toast.success(`Stock count updated for ${count} product${count > 1 ? "s" : ""}`);
       queryClient.invalidateQueries({ queryKey: ["products"] });
       queryClient.invalidateQueries({ queryKey: ["products-stock-by-store"] });
+      queryClient.invalidateQueries({ queryKey: ["stock-count-logs"] });
       onOpenChange(false);
     },
     onError: (error: any) => {

@@ -2,13 +2,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Plus, ClipboardCheck } from "lucide-react";
+import { Search, Plus, ClipboardCheck, History } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Label } from "@/components/ui/label";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
 import { StockCountDialog } from "@/components/StockCountDialog";
+import { StockCountHistoryDialog } from "@/components/StockCountHistoryDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { categoriesApi } from "@/lib/api";
@@ -27,6 +28,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [stockCountDialogOpen, setStockCountDialogOpen] = useState(false);
+  const [stockCountHistoryOpen, setStockCountHistoryOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -206,6 +208,10 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
           <p className="text-muted-foreground text-sm">Manage products for {storeName}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setStockCountHistoryOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
+            <History className="w-4 h-4 mr-2" />
+            Inventory History
+          </Button>
           <Button variant="outline" onClick={() => setStockCountDialogOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
             <ClipboardCheck className="w-4 h-4 mr-2" />
             Stock Count
@@ -413,6 +419,11 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
         open={stockCountDialogOpen}
         onOpenChange={setStockCountDialogOpen}
         products={products}
+        storeName={storeName}
+      />
+      <StockCountHistoryDialog
+        open={stockCountHistoryOpen}
+        onOpenChange={setStockCountHistoryOpen}
         storeName={storeName}
       />
 
