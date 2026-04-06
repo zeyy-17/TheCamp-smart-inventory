@@ -2,12 +2,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, ClipboardCheck } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Label } from "@/components/ui/label";
 import { AddProductDialog } from "@/components/AddProductDialog";
 import { EditProductDialog } from "@/components/EditProductDialog";
+import { StockCountDialog } from "@/components/StockCountDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { categoriesApi } from "@/lib/api";
@@ -25,6 +26,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [stockCountDialogOpen, setStockCountDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -203,10 +205,16 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
           <h2 className="text-2xl font-bold text-foreground mb-1">{storeName} Inventory</h2>
           <p className="text-muted-foreground text-sm">Manage products for {storeName}</p>
         </div>
-        <Button onClick={() => setAddDialogOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Product
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setStockCountDialogOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
+            <ClipboardCheck className="w-4 h-4 mr-2" />
+            Stock Count
+          </Button>
+          <Button onClick={() => setAddDialogOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Active Filter Badge */}
@@ -401,6 +409,12 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
           onSuccess={handleEditSuccess}
         />
       )}
+      <StockCountDialog
+        open={stockCountDialogOpen}
+        onOpenChange={setStockCountDialogOpen}
+        products={products}
+        storeName={storeName}
+      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletePassword(""); }}>
         <AlertDialogContent>
