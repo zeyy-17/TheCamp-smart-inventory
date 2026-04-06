@@ -421,6 +421,11 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
         products={products}
         storeName={storeName}
       />
+      <StockCountHistoryDialog
+        open={stockCountHistoryOpen}
+        onOpenChange={setStockCountHistoryOpen}
+        storeName={storeName}
+      />
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletePassword(""); }}>
         <AlertDialogContent>
