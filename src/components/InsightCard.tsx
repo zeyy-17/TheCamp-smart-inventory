@@ -59,8 +59,8 @@ export const InsightCard = ({
           <Icon className={cn("w-5 h-5", config.iconColor)} />
         </div>
         <div className="flex-1">
-          <h4 className="font-semibold text-primary-foreground mb-1">{title}</h4>
-          <p className="text-sm text-primary-foreground/80 mb-3">{description}</p>
+          <h4 className="font-semibold text-foreground mb-1">{title}</h4>
+          <p className="text-sm text-muted-foreground mb-3">{description}</p>
           {action && onAction && (
             <Button
               onClick={onAction}
