@@ -18,10 +18,10 @@ interface StockCountDialogProps {
 export const StockCountDialog = ({ open, onOpenChange, products, storeName }: StockCountDialogProps) => {
   const [quantities, setQuantities] = useState<Record<number, string>>({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const queryClient = useQueryClient();
 
-  const categoryNames = ["All", ...Array.from(new Set(products.map((p: any) => p.category?.name).filter(Boolean)))];
+  const categoryNames = Array.from(new Set(products.map((p: any) => p.category?.name).filter(Boolean)));
 
   useEffect(() => {
     if (open) {
@@ -31,13 +31,13 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
       });
       setQuantities(initial);
       setSearchQuery("");
-      setSelectedCategory("All");
+      setSelectedCategory("");
     }
   }, [open, products]);
 
   const filteredProducts = products.filter(
     (p) =>
-      (selectedCategory === "All" || p.category?.name === selectedCategory) &&
+      (selectedCategory === "" || p.category?.name === selectedCategory) &&
       (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.sku || "").toLowerCase().includes(searchQuery.toLowerCase()))
   );
@@ -101,7 +101,7 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
               key={cat}
               variant={selectedCategory === cat ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedCategory(cat)}
+              onClick={() => setSelectedCategory(selectedCategory === cat ? "" : cat)}
               className="text-xs"
             >
               {cat}
