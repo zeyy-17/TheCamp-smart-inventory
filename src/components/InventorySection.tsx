@@ -208,6 +208,10 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
           <p className="text-muted-foreground text-sm">Manage products for {storeName}</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setStockCountHistoryOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
+            <History className="w-4 h-4 mr-2" />
+            Inventory History
+          </Button>
           <Button variant="outline" onClick={() => setStockCountDialogOpen(true)} className="shadow-custom-sm hover:shadow-custom-md transition-all">
             <ClipboardCheck className="w-4 h-4 mr-2" />
             Stock Count
