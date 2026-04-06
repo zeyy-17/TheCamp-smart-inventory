@@ -24,7 +24,7 @@ export const EditProductDialog = ({ open, onOpenChange, product, onSuccess }: Ed
     supplier_id: "",
     cost_price: "",
     retail_price: "",
-    quantity: "",
+    
     reorder_level: "",
   });
   const queryClient = useQueryClient();
