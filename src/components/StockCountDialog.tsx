@@ -31,7 +31,7 @@ export const StockCountDialog = ({ open, onOpenChange, products, storeName }: St
       });
       setQuantities(initial);
       setSearchQuery("");
-      setSelectedCategory("All");
+      setSelectedCategory("");
     }
   }, [open, products]);
 
