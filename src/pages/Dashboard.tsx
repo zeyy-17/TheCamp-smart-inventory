@@ -1,8 +1,8 @@
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
+import { StockNotificationBar } from "@/components/StockNotificationBar";
 import { useState } from "react";
-
 const Dashboard = () => {
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
 
@@ -10,6 +10,9 @@ const Dashboard = () => {
   return (
     <div className="flex-1 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
+        {/* Stock Notification Bar */}
+        <StockNotificationBar />
+
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold text-metallic-black">Dashboard Overview</h1>
