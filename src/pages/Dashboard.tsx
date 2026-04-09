@@ -1,8 +1,8 @@
 import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
+import { StockNotificationBar } from "@/components/StockNotificationBar";
 import { useState } from "react";
-
 const Dashboard = () => {
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
 
