@@ -100,7 +100,7 @@ export const StockNotificationBar = () => {
   return (
     <div
       className={cn(
-        "relative cursor-pointer rounded-lg border px-4 py-3 flex items-center justify-between gap-3 transition-all duration-300 mb-4",
+        "relative cursor-pointer rounded-lg border px-3 py-2 flex items-center justify-between gap-2 transition-all duration-300",
         isOutOfStock
           ? "bg-destructive/10 border-destructive/30"
           : "bg-warning/10 border-warning/30",

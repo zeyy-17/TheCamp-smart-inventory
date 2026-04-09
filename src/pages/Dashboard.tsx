@@ -10,15 +10,17 @@ const Dashboard = () => {
   return (
     <div className="flex-1 p-8">
       <div className="max-w-7xl mx-auto space-y-8">
-        {/* Stock Notification Bar */}
-        <StockNotificationBar />
-
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-metallic-black">Dashboard Overview</h1>
-          <p className="text-page-foreground/70 mt-1">
-            Real-time insights for smarter inventory decisions
-          </p>
+        {/* Header + Notification Bar */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-metallic-black">Dashboard Overview</h1>
+            <p className="text-page-foreground/70 mt-1">
+              Real-time insights for smarter inventory decisions
+            </p>
+          </div>
+          <div className="shrink-0 w-[400px]">
+            <StockNotificationBar />
+          </div>
         </div>
 
 
