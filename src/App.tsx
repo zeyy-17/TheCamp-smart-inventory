@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Sidebar } from "./components/Sidebar";
+import { MobileSidebar } from "./components/MobileSidebar";
 import { ScrollToTop } from "./components/ScrollToTop";
 import { ScrollProgress } from "./components/ScrollProgress";
 import { BackToTop } from "./components/BackToTop";
