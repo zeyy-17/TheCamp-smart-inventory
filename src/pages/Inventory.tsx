@@ -42,11 +42,11 @@ const Inventory = () => {
   };
 
   return (
-    <div className="p-8 space-y-6 animate-fade-in min-h-screen w-full">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-8 space-y-6 animate-fade-in min-h-screen w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-metallic-black mb-2">Inventory Management</h1>
-          <p className="text-page-foreground/70">Select a store to manage its beverage inventory</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-metallic-black mb-2">Inventory Management</h1>
+          <p className="text-page-foreground/70 text-sm md:text-base">Select a store to manage its beverage inventory</p>
         </div>
         <DeletionLogBar />
       </div>
