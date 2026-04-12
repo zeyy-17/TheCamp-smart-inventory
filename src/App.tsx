@@ -34,19 +34,24 @@ const AppRoutes = () => {
       <Route
         path="/*"
         element={
-          <ProtectedRoute>
+           <ProtectedRoute>
             <div className="flex min-h-screen">
-              <Sidebar />
-              <Routes>
-              <Route path="/" element={<Dashboard />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/forecast" element={<Forecast />} />
-                <Route path="/insights" element={<Insights />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/purchase-orders" element={<PurchaseOrders />} />
-                <Route path="/account" element={<Account />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <div className="hidden md:block">
+                <Sidebar />
+              </div>
+              <MobileSidebar />
+              <div className="flex-1 pt-14 md:pt-0 min-w-0">
+                <Routes>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/forecast" element={<Forecast />} />
+                  <Route path="/insights" element={<Insights />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/purchase-orders" element={<PurchaseOrders />} />
+                  <Route path="/account" element={<Account />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </div>
             </div>
           </ProtectedRoute>
         }
