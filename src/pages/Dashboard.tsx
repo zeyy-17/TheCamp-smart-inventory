@@ -8,17 +8,17 @@ const Dashboard = () => {
 
 
   return (
-    <div className="flex-1 p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="flex-1 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
         {/* Header + Notification Bar */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-metallic-black">Dashboard Overview</h1>
-            <p className="text-page-foreground/70 mt-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-metallic-black">Dashboard Overview</h1>
+            <p className="text-page-foreground/70 mt-1 text-sm md:text-base">
               Real-time insights for smarter inventory decisions
             </p>
           </div>
-          <div className="shrink-0 w-[400px]">
+          <div className="shrink-0 w-full sm:w-[400px]">
             <StockNotificationBar />
           </div>
         </div>
