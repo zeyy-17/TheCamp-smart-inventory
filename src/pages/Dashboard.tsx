@@ -2,6 +2,7 @@ import { WeeklySalesChart } from "@/components/WeeklySalesChart";
 import { StoreInventoryStatus } from "@/components/StoreInventoryStatus";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
 import { StockNotificationBar } from "@/components/StockNotificationBar";
+import { PageMeta } from "@/components/PageMeta";
 import { useState } from "react";
 const Dashboard = () => {
   const [reorderDialogOpen, setReorderDialogOpen] = useState(false);
@@ -9,6 +10,11 @@ const Dashboard = () => {
 
   return (
     <div className="flex-1 p-4 md:p-8">
+      <PageMeta
+        title="Dashboard | The Camp"
+        description="Real-time inventory dashboard with stock alerts, weekly sales, and store performance for The Camp."
+        path="/"
+      />
       <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
         {/* Header + Notification Bar */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
