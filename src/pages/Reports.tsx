@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ReportSummaryDialog } from "@/components/ReportSummaryDialog";
+import { PageMeta } from "@/components/PageMeta";
 
 const reportTypes = [
   {
@@ -122,6 +123,11 @@ const Reports = () => {
 
   return (
     <div className="flex-1 p-8">
+      <PageMeta
+        title="Reports | The Camp"
+        description="Generate weekly, monthly, and custom inventory and sales reports with downloadable summaries."
+        path="/reports"
+      />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

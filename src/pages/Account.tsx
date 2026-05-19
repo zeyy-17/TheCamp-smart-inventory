@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, LogOut, User } from 'lucide-react';
+import { PageMeta } from '@/components/PageMeta';
 
 const Account = () => {
   const { user, signOut, updatePassword } = useAuth();
@@ -104,6 +105,11 @@ const Account = () => {
 
   return (
     <main className="flex-1 overflow-y-auto p-8">
+      <PageMeta
+        title="Account Settings | The Camp"
+        description="Update your username, password, and profile preferences for The Camp inventory platform."
+        path="/account"
+      />
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-metallic-black mb-2">Profile Settings</h1>

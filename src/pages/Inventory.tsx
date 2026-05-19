@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import ampersandLogo from "@/assets/ampersand-logo.png";
 import hardinLogo from "@/assets/hardin-logo.png";
 import herexLogo from "@/assets/herex-logo.png";
+import { PageMeta } from "@/components/PageMeta";
 
 const stores = [
   { id: "ampersand", name: "Ampersand", logo: ampersandLogo },
@@ -43,6 +44,11 @@ const Inventory = () => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 animate-fade-in min-h-screen w-full">
+      <PageMeta
+        title="Inventory | The Camp"
+        description="Manage beverage stock across Ampersand, hereX, and Hardin stores with live counts, alerts, and adjustments."
+        path="/inventory"
+      />
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-metallic-black mb-2">Inventory Management</h1>

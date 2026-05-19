@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { format } from 'date-fns';
+import { PageMeta } from '@/components/PageMeta';
 import { toast } from 'sonner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -267,6 +268,11 @@ const PurchaseOrders = () => {
 
   return (
     <main className="flex-1 overflow-y-auto p-8">
+      <PageMeta
+        title="Purchase Orders | The Camp"
+        description="Create, track, and manage purchase orders for restocking across all stores in one place."
+        path="/purchase-orders"
+      />
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex justify-between items-center">
           <div>

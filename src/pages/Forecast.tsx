@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import ampersandLogo from "@/assets/ampersand-logo.png";
 import herexLogo from "@/assets/herex-logo.png";
 import hardinLogo from "@/assets/hardin-logo.png";
+import { PageMeta } from "@/components/PageMeta";
 type ForecastData = {
   period: string;
   actual: number;
@@ -168,6 +169,11 @@ const Forecast = () => {
 
   return (
     <div className="flex-1 p-8">
+      <PageMeta
+        title="Sales Forecast | The Camp"
+        description="AI-driven sales forecasts and demand predictions to plan inventory and reduce stockouts across your stores."
+        path="/forecast"
+      />
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
