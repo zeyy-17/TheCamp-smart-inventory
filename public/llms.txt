@@ -1,0 +1,5 @@
+# The Camp
+
+> AI-powered inventory management with predictive analytics, real-time monitoring, and prescriptive decision-making for optimal stock control.
+
+The Camp is a smart inventory management system that helps businesses track products across multiple stores, monitor stock levels, generate AI-powered sales forecasts, and receive intelligent insights for inventory optimization. The platform offers real-time inventory alerts, demand forecasting, promotion planning, and purchase order management.
