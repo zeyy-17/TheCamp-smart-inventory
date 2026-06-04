@@ -407,18 +407,46 @@ const Insights = () => {
               ))}
             </div>
           ) : filteredInsights.length > 0 ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {filteredInsights.map((insight, index) => (
-                <InsightCard
-                  key={index}
-                  type={insight.type}
-                  title={insight.title}
-                  description={insight.description}
-                  action={insight.action}
-                  onAction={() => handleAction(insight.action || "", insight)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {paginatedInsights.map((insight, index) => (
+                  <InsightCard
+                    key={`${safePage}-${index}`}
+                    type={insight.type}
+                    title={insight.title}
+                    description={insight.description}
+                    action={insight.action}
+                    onAction={() => handleAction(insight.action || "", insight)}
+                  />
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4">
+                  <p className="text-xs text-muted-foreground">
+                    Showing {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredInsights.length)} of {filteredInsights.length}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={safePage === 1}
+                      className="px-3 py-1.5 text-sm rounded-md border border-border bg-card text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-muted-foreground">
+                      Page {safePage} of {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={safePage === totalPages}
+                      className="px-3 py-1.5 text-sm rounded-md border border-border bg-card text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <Card className="p-8 text-center">
               <div className="flex flex-col items-center gap-3">
