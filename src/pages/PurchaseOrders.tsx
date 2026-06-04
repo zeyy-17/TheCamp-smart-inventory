@@ -177,6 +177,21 @@ const PurchaseOrders = () => {
   const groupedInvoices = sortOrders(Object.values(groupedByInvoice));
   const sortedFilteredOrders = filteredOrders ? sortOrders(filteredOrders) : [];
 
+  // Pagination — 6 items per page, shared across All tab and per-store tabs
+  const PAGE_SIZE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalItems = activeStore === 'All' ? groupedInvoices.length : sortedFilteredOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = (safePage - 1) * PAGE_SIZE;
+  const endIdx = startIdx + PAGE_SIZE;
+  const paginatedGroupedInvoices = groupedInvoices.slice(startIdx, endIdx);
+  const paginatedFilteredOrders = sortedFilteredOrders.slice(startIdx, endIdx);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeStore, statusFilter, searchQuery, sortBy]);
+
   const handleEdit = (order: any) => {
     setSelectedOrder(order);
     setEditDialogOpen(true);
