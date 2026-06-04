@@ -498,8 +498,37 @@ const PurchaseOrders = () => {
                             {order.notes && (
                               <div className="px-4 py-2 bg-muted/20 text-xs text-muted-foreground border-t">
                                 <span className="font-medium">Notes:</span> {order.notes}
-                              </div>
-                            )}
+              </div>
+            )}
+
+            {!isLoading && totalItems > 0 && totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 mt-2 border-t">
+                <p className="text-xs text-muted-foreground">
+                  Showing {startIdx + 1}–{Math.min(endIdx, totalItems)} of {totalItems}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safePage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {safePage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safePage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
                             <div className="px-4 py-2 flex justify-end gap-1 border-t">
                               <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(invoiceNum)}>
                                 <Eye className="h-4 w-4 mr-1" /> View Invoice
