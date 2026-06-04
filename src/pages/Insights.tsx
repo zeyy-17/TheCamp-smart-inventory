@@ -239,6 +239,13 @@ const Insights = () => {
   };
 
   const filteredInsights = getFilteredInsights();
+  const totalPages = Math.max(1, Math.ceil(filteredInsights.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedInsights = filteredInsights.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeFilter, filteredInsights.length]);
 
   // Count insights by category
   const activeCount = generatedInsights.filter(i => i.category === "active").length;
