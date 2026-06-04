@@ -178,7 +178,7 @@ const PurchaseOrders = () => {
   const sortedFilteredOrders = filteredOrders ? sortOrders(filteredOrders) : [];
 
   // Pagination — 6 items per page, shared across All tab and per-store tabs
-  const PAGE_SIZE = 6;
+  const PAGE_SIZE = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const totalItems = activeStore === 'All' ? groupedInvoices.length : sortedFilteredOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
