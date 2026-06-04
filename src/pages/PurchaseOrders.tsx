@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -177,6 +177,21 @@ const PurchaseOrders = () => {
   const groupedInvoices = sortOrders(Object.values(groupedByInvoice));
   const sortedFilteredOrders = filteredOrders ? sortOrders(filteredOrders) : [];
 
+  // Pagination — 6 items per page, shared across All tab and per-store tabs
+  const PAGE_SIZE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalItems = activeStore === 'All' ? groupedInvoices.length : sortedFilteredOrders.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = (safePage - 1) * PAGE_SIZE;
+  const endIdx = startIdx + PAGE_SIZE;
+  const paginatedGroupedInvoices = groupedInvoices.slice(startIdx, endIdx);
+  const paginatedFilteredOrders = sortedFilteredOrders.slice(startIdx, endIdx);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeStore, statusFilter, searchQuery, sortBy]);
+
   const handleEdit = (order: any) => {
     setSelectedOrder(order);
     setEditDialogOpen(true);
@@ -353,7 +368,7 @@ const PurchaseOrders = () => {
             ) : (
               <div className="space-y-2">
                 {activeStore === 'All' ? (
-                  groupedInvoices.map((group: any) => {
+                  paginatedGroupedInvoices.map((group: any) => {
                     const key = `group-${group.invoiceNumber}`;
                     return (
                       <Collapsible key={key} open={openItems.has(key)} onOpenChange={() => toggleItem(key)}>
@@ -434,7 +449,7 @@ const PurchaseOrders = () => {
                     );
                   })
                 ) : (
-                  sortedFilteredOrders.map((order: any) => {
+                  paginatedFilteredOrders.map((order: any) => {
                     const key = `order-${order.id}`;
                     const invoiceNum = order.invoice_number || `#${order.id}`;
                     return (
@@ -483,8 +498,37 @@ const PurchaseOrders = () => {
                             {order.notes && (
                               <div className="px-4 py-2 bg-muted/20 text-xs text-muted-foreground border-t">
                                 <span className="font-medium">Notes:</span> {order.notes}
-                              </div>
-                            )}
+              </div>
+            )}
+
+            {!isLoading && totalItems > 0 && totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 mt-2 border-t">
+                <p className="text-xs text-muted-foreground">
+                  Showing {startIdx + 1}–{Math.min(endIdx, totalItems)} of {totalItems}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safePage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {safePage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safePage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
                             <div className="px-4 py-2 flex justify-end gap-1 border-t">
                               <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(invoiceNum)}>
                                 <Eye className="h-4 w-4 mr-1" /> View Invoice
