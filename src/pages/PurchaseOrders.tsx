@@ -368,7 +368,7 @@ const PurchaseOrders = () => {
             ) : (
               <div className="space-y-2">
                 {activeStore === 'All' ? (
-                  groupedInvoices.map((group: any) => {
+                  paginatedGroupedInvoices.map((group: any) => {
                     const key = `group-${group.invoiceNumber}`;
                     return (
                       <Collapsible key={key} open={openItems.has(key)} onOpenChange={() => toggleItem(key)}>
