@@ -33,6 +33,8 @@ const Insights = () => {
   const [selectedProduct, setSelectedProduct] = useState<{ name?: string; id?: number } | null>(null);
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   const [generatedInsights, setGeneratedInsights] = useState<Insight[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 6;
 
   // Fetch products data
   const { data: products = [], isLoading: productsLoading } = useQuery({
