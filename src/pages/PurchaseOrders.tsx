@@ -178,7 +178,7 @@ const PurchaseOrders = () => {
   const sortedFilteredOrders = filteredOrders ? sortOrders(filteredOrders) : [];
 
   // Pagination — 6 items per page, shared across All tab and per-store tabs
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 6;
   const [currentPage, setCurrentPage] = useState(1);
   const totalItems = activeStore === 'All' ? groupedInvoices.length : sortedFilteredOrders.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
@@ -366,7 +366,7 @@ const PurchaseOrders = () => {
                 No purchase orders found{activeStore !== 'All' ? ` for ${activeStore}` : ''}. Create your first order to get started.
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {activeStore === 'All' ? (
                   paginatedGroupedInvoices.map((group: any) => {
                     const key = `group-${group.invoiceNumber}`;
@@ -522,6 +522,8 @@ const PurchaseOrders = () => {
                   })
                 )}
 
+              </div>
+            )}
             {!isLoading && totalItems > 0 && totalPages > 1 && (
               <div className="flex items-center justify-between pt-4 mt-2 border-t">
                 <p className="text-xs text-muted-foreground">
@@ -548,8 +550,6 @@ const PurchaseOrders = () => {
                     Next
                   </Button>
                 </div>
-              </div>
-            )}
               </div>
             )}
           </CardContent>
