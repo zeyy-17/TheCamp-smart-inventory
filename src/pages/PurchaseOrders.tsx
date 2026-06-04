@@ -449,7 +449,7 @@ const PurchaseOrders = () => {
                     );
                   })
                 ) : (
-                  sortedFilteredOrders.map((order: any) => {
+                  paginatedFilteredOrders.map((order: any) => {
                     const key = `order-${order.id}`;
                     const invoiceNum = order.invoice_number || `#${order.id}`;
                     return (
