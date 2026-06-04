@@ -521,7 +521,6 @@ const PurchaseOrders = () => {
                     );
                   })
                 )}
-              </div>
 
             {!isLoading && totalItems > 0 && totalPages > 1 && (
               <div className="flex items-center justify-between pt-4 mt-2 border-t">
@@ -551,6 +550,7 @@ const PurchaseOrders = () => {
                 </div>
               </div>
             )}
+              </div>
             )}
           </CardContent>
         </Card>
