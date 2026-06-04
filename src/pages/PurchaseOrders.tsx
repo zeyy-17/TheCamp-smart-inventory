@@ -552,8 +552,6 @@ const PurchaseOrders = () => {
                 </div>
               </div>
             )}
-              <div className="hidden">
-            )}
           </CardContent>
         </Card>
 
