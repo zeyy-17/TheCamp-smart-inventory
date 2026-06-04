@@ -500,6 +500,28 @@ const PurchaseOrders = () => {
                                 <span className="font-medium">Notes:</span> {order.notes}
               </div>
             )}
+                            <div className="px-4 py-2 flex justify-end gap-1 border-t">
+                              <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(invoiceNum)}>
+                                <Eye className="h-4 w-4 mr-1" /> View Invoice
+                              </Button>
+                              {order.status === 'pending' && (
+                                <>
+                                  <Button variant="ghost" size="sm" onClick={() => handleEdit(order)}>
+                                    <Pencil className="h-4 w-4 mr-1" /> Edit
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(order)}>
+                                    <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    );
+                  })
+                )}
+              </div>
 
             {!isLoading && totalItems > 0 && totalPages > 1 && (
               <div className="flex items-center justify-between pt-4 mt-2 border-t">
@@ -529,28 +551,6 @@ const PurchaseOrders = () => {
                 </div>
               </div>
             )}
-                            <div className="px-4 py-2 flex justify-end gap-1 border-t">
-                              <Button variant="ghost" size="sm" onClick={() => handleViewInvoice(invoiceNum)}>
-                                <Eye className="h-4 w-4 mr-1" /> View Invoice
-                              </Button>
-                              {order.status === 'pending' && (
-                                <>
-                                  <Button variant="ghost" size="sm" onClick={() => handleEdit(order)}>
-                                    <Pencil className="h-4 w-4 mr-1" /> Edit
-                                  </Button>
-                                  <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(order)}>
-                                    <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Delete
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
-                    );
-                  })
-                )}
-              </div>
             )}
           </CardContent>
         </Card>
