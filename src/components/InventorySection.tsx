@@ -118,7 +118,6 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
 
   const deleteMutation = useMutation({
     mutationFn: async (productId: number) => {
-      // Find the product to log its details before deletion
       const productToLog = products.find((p: any) => p.id === productId);
       if (productToLog) {
         await supabase.from('deletion_logs').insert({
@@ -128,8 +127,11 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
           quantity: productToLog.quantity,
           cost_price: productToLog.cost_price,
           retail_price: productToLog.retail_price,
+          reorder_level: productToLog.reorder_level,
+          category_id: productToLog.category_id,
+          supplier_id: productToLog.supplier_id,
           deleted_by: user?.email || 'unknown',
-        });
+        } as any);
       }
       const { error } = await supabase
         .from('products')
@@ -138,14 +140,14 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Product removed successfully");
+      toast.success("Product archived successfully");
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['top-products'] });
       queryClient.invalidateQueries({ queryKey: ['deletion-logs'] });
     },
     onError: (error: any) => {
-      console.error("Delete error:", error);
-      toast.error(error.message || "Failed to remove product");
+      console.error("Archive error:", error);
+      toast.error(error.message || "Failed to archive product");
     },
     onSettled: () => {
       setDeleteDialogOpen(false);
@@ -155,23 +157,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
 
   const handleRemoveProduct = async () => {
     if (!productToDelete) return;
-    if (!deletePassword) {
-      toast.error("Please enter your password to confirm deletion");
-      return;
-    }
-    setIsVerifyingPassword(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user?.email || '',
-      password: deletePassword,
-    });
-    if (signInError) {
-      setIsVerifyingPassword(false);
-      toast.error("Incorrect password. Deletion cancelled.");
-      return;
-    }
-    setIsVerifyingPassword(false);
     deleteMutation.mutate(productToDelete);
-    setDeletePassword("");
   };
 
   const handleAddSuccess = () => {
@@ -354,7 +340,7 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
                             setDeleteDialogOpen(true);
                           }}
                         >
-                          Remove
+                          Archive
                         </Button>
                       </div>
                     </td>
@@ -427,29 +413,18 @@ const InventorySection = ({ storeName, statusFilter, onStatusFilterChange }: Inv
         storeName={storeName}
       />
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletePassword(""); }}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Archive this product?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product from your inventory. Enter your password to confirm.
+              The product will be moved to the Archived list. You can restore it back to your inventory at any time.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="py-2">
-            <Label htmlFor="delete-password" className="text-sm font-medium">Password</Label>
-            <Input
-              id="delete-password"
-              type="password"
-              value={deletePassword}
-              onChange={(e) => setDeletePassword(e.target.value)}
-              placeholder="Enter your password"
-              className="mt-1"
-            />
-          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRemoveProduct} disabled={!deletePassword || isVerifyingPassword}>
-              {isVerifyingPassword ? "Verifying..." : "Confirm Remove"}
+            <AlertDialogAction onClick={handleRemoveProduct} disabled={deleteMutation.isPending}>
+              {deleteMutation.isPending ? "Archiving..." : "Confirm Archive"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
