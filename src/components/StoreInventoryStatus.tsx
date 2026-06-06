@@ -96,7 +96,7 @@ export const StoreInventoryStatus = () => {
                   variant="outline"
                   size="sm"
                   className="w-full text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
-                  onClick={() => setRestockStore(store.name)}
+                  onClick={() => setRestockMode({ store: store.name, mode: "out-of-stock" })}
                 >
                   View All
                 </Button>
