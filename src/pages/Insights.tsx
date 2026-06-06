@@ -490,6 +490,15 @@ const Insights = () => {
       </div>
 
       <CreatePurchaseOrderDialog open={purchaseOrderOpen} onOpenChange={setPurchaseOrderOpen} />
+      {restockState && (
+        <RestockOutOfStockDialog
+          open={!!restockState}
+          onOpenChange={(o) => { if (!o) setRestockState(null); }}
+          storeName={restockState.store}
+          mode={restockState.mode}
+        />
+      )}
+
       <AIPromotionDialog 
         open={promotionDialogOpen} 
         onOpenChange={setPromotionDialogOpen}
