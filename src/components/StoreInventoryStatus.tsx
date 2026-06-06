@@ -53,7 +53,9 @@ export const StoreInventoryStatus = () => {
   });
 
   return (
+    <>
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
       {stores.map((store) => {
         const data = storeData[store.id];
         const outOfStock = data?.outOfStock || [];
