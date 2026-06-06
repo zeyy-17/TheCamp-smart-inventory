@@ -94,10 +94,11 @@ export const StoreInventoryStatus = () => {
                   variant="outline"
                   size="sm"
                   className="w-full text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
-                  onClick={() => navigate(`/inventory?store=${store.id}&filter=out-of-stock`)}
+                  onClick={() => setRestockStore(store.name)}
                 >
                   View All
                 </Button>
+
               </div>
 
               {/* Low Stock */}
