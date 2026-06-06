@@ -24,7 +24,7 @@ interface StoreStock {
 
 export const StoreInventoryStatus = () => {
   const navigate = useNavigate();
-  const [restockStore, setRestockStore] = useState<string | null>(null);
+  const [restockState, setRestockMode] = useState<{ store: string; mode: "out-of-stock" | "low-stock" } | null>(null);
 
 
   const { data: storeData = {} } = useQuery<Record<string, StoreStock>>({
