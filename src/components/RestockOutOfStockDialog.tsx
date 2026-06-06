@@ -174,11 +174,16 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName, mode = 
         <DialogContent className="sm:max-w-[720px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <PackageX className="w-5 h-5 text-destructive" />
-              Restock Out of Stock — {storeName}
+              {mode === "out-of-stock" ? (
+                <PackageX className="w-5 h-5 text-destructive" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-warning" />
+              )}
+              {mode === "out-of-stock" ? "Restock Out of Stock" : "Restock Low Stock"} — {storeName}
             </DialogTitle>
             <DialogDescription>
-              Create a purchase order for all out-of-stock items in this store. Set supplier, delivery date, and quantity per item.
+              Create a purchase order for all {mode === "out-of-stock" ? "out-of-stock" : "low-stock"} items in this store. Set supplier, delivery date, and quantity per item.
+
             </DialogDescription>
           </DialogHeader>
 
