@@ -245,11 +245,12 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName, mode = 
             </div>
 
             <div className="space-y-2">
-              <Label>Out of Stock Items ({outOfStockProducts.length})</Label>
+              <Label>{mode === "out-of-stock" ? "Out of Stock" : "Low Stock"} Items ({outOfStockProducts.length})</Label>
               <ScrollArea className="h-[260px] rounded-md border p-3">
                 {outOfStockProducts.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No out-of-stock items for {storeName}.
+                    No {mode === "out-of-stock" ? "out-of-stock" : "low-stock"} items for {storeName}.
+
                   </p>
                 ) : (
                   <div className="space-y-2">
