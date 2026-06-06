@@ -329,6 +329,11 @@ const Reports = () => {
         action={summaryDialog.action}
         onConfirm={handleConfirmAction}
       />
+
+      <CustomRangeReportDialog
+        open={customDialogOpen}
+        onOpenChange={setCustomDialogOpen}
+      />
     </div>
   );
 };
