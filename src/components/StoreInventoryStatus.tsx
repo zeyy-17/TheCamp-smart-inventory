@@ -138,13 +138,15 @@ export const StoreInventoryStatus = () => {
         );
       })}
     </div>
-    {restockStore && (
+    {restockState && (
       <RestockOutOfStockDialog
-        open={!!restockStore}
-        onOpenChange={(o) => { if (!o) setRestockStore(null); }}
-        storeName={restockStore}
+        open={!!restockState}
+        onOpenChange={(o) => { if (!o) setRestockMode(null); }}
+        storeName={restockState.store}
+        mode={restockState.mode}
       />
     )}
+
     </>
   );
 };
