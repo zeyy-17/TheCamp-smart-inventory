@@ -262,8 +262,9 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName, mode = 
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{p.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            SKU: {p.sku || "—"} · Reorder: {p.reorder_level ?? 0}
+                            SKU: {p.sku || "—"} · Stock: {p.quantity ?? 0} · Reorder: {p.reorder_level ?? 0}
                           </p>
+
                         </div>
                         <Input
                           type="number"
