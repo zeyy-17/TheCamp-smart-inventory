@@ -4,9 +4,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { PackageX, AlertTriangle } from "lucide-react";
+import { useState } from "react";
+import { RestockOutOfStockDialog } from "./RestockOutOfStockDialog";
 import ampersandLogo from "@/assets/ampersand-logo.png";
 import hardinLogo from "@/assets/hardin-logo.png";
 import herexLogo from "@/assets/herex-logo.png";
+
 
 const stores = [
   { id: "ampersand", name: "Ampersand", logo: ampersandLogo },
