@@ -40,6 +40,7 @@ const Reports = () => {
     action: "download",
     title: "",
   });
+  const [customDialogOpen, setCustomDialogOpen] = useState(false);
 
   // Fetch today's sales
   const { data: todaySales = [] } = useQuery({
