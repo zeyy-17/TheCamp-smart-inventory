@@ -9,6 +9,7 @@ import { format, subDays } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { ReportSummaryDialog } from "@/components/ReportSummaryDialog";
 import { PageMeta } from "@/components/PageMeta";
+import { CustomRangeReportDialog } from "@/components/CustomRangeReportDialog";
 
 const reportTypes = [
   {
