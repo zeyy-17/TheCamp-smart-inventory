@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
+import { RestockOutOfStockDialog } from "@/components/RestockOutOfStockDialog";
+
 import { AIPromotionDialog } from "@/components/AIPromotionDialog";
 import { SalesChartDialog } from "@/components/SalesChartDialog";
 import { supabase } from "@/integrations/supabase/client";
