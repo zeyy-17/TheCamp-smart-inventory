@@ -30,6 +30,8 @@ const Insights = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
+  const [restockState, setRestockState] = useState<{ store: string; mode: "out-of-stock" | "low-stock" } | null>(null);
+
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [salesChartOpen, setSalesChartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{ name?: string; id?: number } | null>(null);
