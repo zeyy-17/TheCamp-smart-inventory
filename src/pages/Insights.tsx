@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CreatePurchaseOrderDialog } from "@/components/CreatePurchaseOrderDialog";
+import { RestockOutOfStockDialog } from "@/components/RestockOutOfStockDialog";
+
 import { AIPromotionDialog } from "@/components/AIPromotionDialog";
 import { SalesChartDialog } from "@/components/SalesChartDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +30,8 @@ const Insights = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [purchaseOrderOpen, setPurchaseOrderOpen] = useState(false);
+  const [restockState, setRestockState] = useState<{ store: string; mode: "out-of-stock" | "low-stock" } | null>(null);
+
   const [promotionDialogOpen, setPromotionDialogOpen] = useState(false);
   const [salesChartOpen, setSalesChartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<{ name?: string; id?: number } | null>(null);
@@ -187,9 +191,18 @@ const Insights = () => {
   };
   const handleAction = (actionType: string, insight?: Insight) => {
     switch (actionType) {
-      case "Create Purchase Order":
-        navigate('/purchase-orders');
+      case "Create Purchase Order": {
+        const product = products.find((p: any) => p.id === insight?.productId);
+        const store = product?.store;
+        if (store) {
+          const isLow = insight?.title?.startsWith("Low Stock");
+          setRestockState({ store, mode: isLow ? "low-stock" : "out-of-stock" });
+        } else {
+          setPurchaseOrderOpen(true);
+        }
         break;
+      }
+
       case "View Product":
       case "Edit Product":
         navigate('/inventory');
@@ -477,6 +490,15 @@ const Insights = () => {
       </div>
 
       <CreatePurchaseOrderDialog open={purchaseOrderOpen} onOpenChange={setPurchaseOrderOpen} />
+      {restockState && (
+        <RestockOutOfStockDialog
+          open={!!restockState}
+          onOpenChange={(o) => { if (!o) setRestockState(null); }}
+          storeName={restockState.store}
+          mode={restockState.mode}
+        />
+      )}
+
       <AIPromotionDialog 
         open={promotionDialogOpen} 
         onOpenChange={setPromotionDialogOpen}
