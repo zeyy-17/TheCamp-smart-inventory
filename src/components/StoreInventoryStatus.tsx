@@ -128,7 +128,7 @@ export const StoreInventoryStatus = () => {
                   variant="outline"
                   size="sm"
                   className="w-full text-xs border-warning/30 text-warning hover:bg-warning/10"
-                  onClick={() => navigate(`/inventory?store=${store.id}&filter=low-stock`)}
+                  onClick={() => setRestockMode({ store: store.name, mode: "low-stock" })}
                 >
                   View All
                 </Button>
