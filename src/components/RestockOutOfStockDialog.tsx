@@ -57,19 +57,24 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName, mode = 
   } | null>(null);
 
   const { data: outOfStockProducts = [] } = useQuery({
-    queryKey: ["out-of-stock-products", storeName],
+    queryKey: ["restock-products", storeName, mode],
     enabled: open && !!storeName,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, sku, cost_price, reorder_level, store")
+        .select("id, name, sku, cost_price, reorder_level, quantity, store")
         .eq("store", storeName)
-        .eq("quantity", 0)
         .order("name");
       if (error) throw error;
-      return data || [];
+      const list = (data || []).filter((p: any) =>
+        mode === "out-of-stock"
+          ? (p.quantity ?? 0) === 0
+          : (p.quantity ?? 0) > 0 && (p.quantity ?? 0) <= (p.reorder_level ?? 0)
+      );
+      return list;
     },
   });
+
 
   const { data: suppliers } = useQuery({
     queryKey: ["suppliers"],
