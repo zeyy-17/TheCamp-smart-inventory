@@ -41,7 +41,7 @@ const generateInvoiceNumber = () => {
   return `PO-${y}${m}${day}-${r}`;
 };
 
-export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName }: RestockOutOfStockDialogProps) => {
+export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName, mode = "out-of-stock" }: RestockOutOfStockDialogProps) => {
   const queryClient = useQueryClient();
   const [invoiceNumber, setInvoiceNumber] = useState(generateInvoiceNumber());
   const [supplierId, setSupplierId] = useState("");
