@@ -19,7 +19,9 @@ interface RestockOutOfStockDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   storeName: string;
+  mode?: "out-of-stock" | "low-stock";
 }
+
 
 interface InvoiceItem {
   productName: string;
