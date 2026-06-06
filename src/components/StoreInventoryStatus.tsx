@@ -24,7 +24,7 @@ interface StoreStock {
 
 export const StoreInventoryStatus = () => {
   const navigate = useNavigate();
-  const [restockStore, setRestockStore] = useState<string | null>(null);
+  const [restockState, setRestockMode] = useState<{ store: string; mode: "out-of-stock" | "low-stock" } | null>(null);
 
 
   const { data: storeData = {} } = useQuery<Record<string, StoreStock>>({
@@ -96,7 +96,7 @@ export const StoreInventoryStatus = () => {
                   variant="outline"
                   size="sm"
                   className="w-full text-xs border-destructive/30 text-destructive hover:bg-destructive/10"
-                  onClick={() => setRestockStore(store.name)}
+                  onClick={() => setRestockMode({ store: store.name, mode: "out-of-stock" })}
                 >
                   View All
                 </Button>
@@ -128,7 +128,7 @@ export const StoreInventoryStatus = () => {
                   variant="outline"
                   size="sm"
                   className="w-full text-xs border-warning/30 text-warning hover:bg-warning/10"
-                  onClick={() => navigate(`/inventory?store=${store.id}&filter=low-stock`)}
+                  onClick={() => setRestockMode({ store: store.name, mode: "low-stock" })}
                 >
                   View All
                 </Button>
@@ -138,13 +138,15 @@ export const StoreInventoryStatus = () => {
         );
       })}
     </div>
-    {restockStore && (
+    {restockState && (
       <RestockOutOfStockDialog
-        open={!!restockStore}
-        onOpenChange={(o) => { if (!o) setRestockStore(null); }}
-        storeName={restockStore}
+        open={!!restockState}
+        onOpenChange={(o) => { if (!o) setRestockMode(null); }}
+        storeName={restockState.store}
+        mode={restockState.mode}
       />
     )}
+
     </>
   );
 };

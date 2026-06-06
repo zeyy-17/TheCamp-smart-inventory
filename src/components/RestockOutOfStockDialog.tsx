@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { CalendarIcon, PackageX } from "lucide-react";
+import { CalendarIcon, PackageX, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -19,7 +19,9 @@ interface RestockOutOfStockDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   storeName: string;
+  mode?: "out-of-stock" | "low-stock";
 }
+
 
 interface InvoiceItem {
   productName: string;
@@ -39,7 +41,7 @@ const generateInvoiceNumber = () => {
   return `PO-${y}${m}${day}-${r}`;
 };
 
-export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName }: RestockOutOfStockDialogProps) => {
+export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName, mode = "out-of-stock" }: RestockOutOfStockDialogProps) => {
   const queryClient = useQueryClient();
   const [invoiceNumber, setInvoiceNumber] = useState(generateInvoiceNumber());
   const [supplierId, setSupplierId] = useState("");
@@ -55,19 +57,24 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName }: Resto
   } | null>(null);
 
   const { data: outOfStockProducts = [] } = useQuery({
-    queryKey: ["out-of-stock-products", storeName],
+    queryKey: ["restock-products", storeName, mode],
     enabled: open && !!storeName,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, sku, cost_price, reorder_level, store")
+        .select("id, name, sku, cost_price, reorder_level, quantity, store")
         .eq("store", storeName)
-        .eq("quantity", 0)
         .order("name");
       if (error) throw error;
-      return data || [];
+      const list = (data || []).filter((p: any) =>
+        mode === "out-of-stock"
+          ? (p.quantity ?? 0) === 0
+          : (p.quantity ?? 0) > 0 && (p.quantity ?? 0) <= (p.reorder_level ?? 0)
+      );
+      return list;
     },
   });
+
 
   const { data: suppliers } = useQuery({
     queryKey: ["suppliers"],
@@ -167,11 +174,16 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName }: Resto
         <DialogContent className="sm:max-w-[720px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <PackageX className="w-5 h-5 text-destructive" />
-              Restock Out of Stock — {storeName}
+              {mode === "out-of-stock" ? (
+                <PackageX className="w-5 h-5 text-destructive" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-warning" />
+              )}
+              {mode === "out-of-stock" ? "Restock Out of Stock" : "Restock Low Stock"} — {storeName}
             </DialogTitle>
             <DialogDescription>
-              Create a purchase order for all out-of-stock items in this store. Set supplier, delivery date, and quantity per item.
+              Create a purchase order for all {mode === "out-of-stock" ? "out-of-stock" : "low-stock"} items in this store. Set supplier, delivery date, and quantity per item.
+
             </DialogDescription>
           </DialogHeader>
 
@@ -233,11 +245,12 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName }: Resto
             </div>
 
             <div className="space-y-2">
-              <Label>Out of Stock Items ({outOfStockProducts.length})</Label>
+              <Label>{mode === "out-of-stock" ? "Out of Stock" : "Low Stock"} Items ({outOfStockProducts.length})</Label>
               <ScrollArea className="h-[260px] rounded-md border p-3">
                 {outOfStockProducts.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
-                    No out-of-stock items for {storeName}.
+                    No {mode === "out-of-stock" ? "out-of-stock" : "low-stock"} items for {storeName}.
+
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -249,8 +262,9 @@ export const RestockOutOfStockDialog = ({ open, onOpenChange, storeName }: Resto
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{p.name}</p>
                           <p className="text-xs text-muted-foreground">
-                            SKU: {p.sku || "—"} · Reorder: {p.reorder_level ?? 0}
+                            SKU: {p.sku || "—"} · Stock: {p.quantity ?? 0} · Reorder: {p.reorder_level ?? 0}
                           </p>
+
                         </div>
                         <Input
                           type="number"
