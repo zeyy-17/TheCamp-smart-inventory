@@ -34,37 +34,46 @@ export type Database = {
       }
       deletion_logs: {
         Row: {
+          category_id: number | null
           cost_price: number | null
           deleted_at: string
           deleted_by: string | null
           id: number
           product_name: string
           quantity: number | null
+          reorder_level: number | null
           retail_price: number | null
           sku: string
           store: string | null
+          supplier_id: number | null
         }
         Insert: {
+          category_id?: number | null
           cost_price?: number | null
           deleted_at?: string
           deleted_by?: string | null
           id?: number
           product_name: string
           quantity?: number | null
+          reorder_level?: number | null
           retail_price?: number | null
           sku: string
           store?: string | null
+          supplier_id?: number | null
         }
         Update: {
+          category_id?: number | null
           cost_price?: number | null
           deleted_at?: string
           deleted_by?: string | null
           id?: number
           product_name?: string
           quantity?: number | null
+          reorder_level?: number | null
           retail_price?: number | null
           sku?: string
           store?: string | null
+          supplier_id?: number | null
         }
         Relationships: []
       }
