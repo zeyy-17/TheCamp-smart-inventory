@@ -139,6 +139,10 @@ const Reports = () => {
               Generate and download comprehensive inventory reports
             </p>
           </div>
+          <Button onClick={() => setCustomDialogOpen(true)} className="gap-2">
+            <Calendar className="w-4 h-4" />
+            Download by Date Range
+          </Button>
         </div>
 
         {/* Summary Cards */}
