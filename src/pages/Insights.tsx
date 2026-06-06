@@ -191,9 +191,18 @@ const Insights = () => {
   };
   const handleAction = (actionType: string, insight?: Insight) => {
     switch (actionType) {
-      case "Create Purchase Order":
-        navigate('/purchase-orders');
+      case "Create Purchase Order": {
+        const product = products.find((p: any) => p.id === insight?.productId);
+        const store = product?.store;
+        if (store) {
+          const isLow = insight?.title?.startsWith("Low Stock");
+          setRestockState({ store, mode: isLow ? "low-stock" : "out-of-stock" });
+        } else {
+          setPurchaseOrderOpen(true);
+        }
         break;
+      }
+
       case "View Product":
       case "Edit Product":
         navigate('/inventory');
