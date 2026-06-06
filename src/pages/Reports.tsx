@@ -294,6 +294,30 @@ const Reports = () => {
               </Card>
             );
           })}
+
+          {/* Custom Date Range Report */}
+          <Card className="p-6 hover:shadow-custom-lg transition-shadow border-primary/30">
+            <div className="flex items-start gap-4">
+              <div className="bg-primary/10 p-3 rounded-lg">
+                <Calendar className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  Custom Date Range Report
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Pick any start and end date to download a tailored report for that period (sales, movements, purchase orders, low stock).
+                </p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Example: download a report from May 20, 2026 to June 6, 2026
+                </p>
+                <Button size="sm" className="gap-2" onClick={() => setCustomDialogOpen(true)}>
+                  <Download className="w-4 h-4" />
+                  Choose Dates & Download
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
 
       </div>
